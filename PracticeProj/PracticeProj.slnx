@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="DX11/DX11.vcxproj" />
+  <Project Path="DX12/DX12.vcxproj" />
+  <Project Path="DX9/DX9.vcxproj" />
+</Solution>
