@@ -29,25 +29,25 @@
 :root[data-generation="dx11"] { --accent: #1f6fd0; --accent-soft: #e6f0fc; --core: #1f5fb3; }
 :root[data-generation="dx12"] { --accent: #7a3fc7; --accent-soft: #f1eafb; --core: #6a33b3; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #12151c;
-    --surface: #1a1f29;
-    --surface-2: #222835;
-    --text: #e6e9ef;
-    --muted: #9aa4b5;
-    --line: #2e3544;
-    --code-bg: #0e1118;
-    --run: #4cc38f;
-    --run-bg: #12291f;
-    --accent-soft: #2a2119;
-    --shadow: none;
-    color-scheme: dark;
-  }
-  :root[data-generation="dx11"] { --accent: #5a9cf0; --accent-soft: #172437; --core: #7eb2f5; }
-  :root[data-generation="dx12"] { --accent: #a57be6; --accent-soft: #231b33; --core: #b793ee; }
-  :root { --accent: #ef8a4c; --core: #f19a63; }
+/* ダーク（既定）。上部のボタンで切り替え、選んだ方は theme.js がブラウザに覚えさせる。 */
+:root[data-theme="dark"] {
+  --bg: #12151c;
+  --surface: #1a1f29;
+  --surface-2: #222835;
+  --text: #e6e9ef;
+  --muted: #9aa4b5;
+  --line: #2e3544;
+  --code-bg: #0e1118;
+  --run: #4cc38f;
+  --run-bg: #12291f;
+  --accent: #ef8a4c;
+  --accent-soft: #2a2119;
+  --core: #f19a63;
+  --shadow: none;
+  color-scheme: dark;
 }
+:root[data-theme="dark"][data-generation="dx11"] { --accent: #5a9cf0; --accent-soft: #172437; --core: #7eb2f5; }
+:root[data-theme="dark"][data-generation="dx12"] { --accent: #a57be6; --accent-soft: #231b33; --core: #b793ee; }
 
 * { box-sizing: border-box; }
 
@@ -132,6 +132,14 @@ img { max-width: 100%; height: auto; display: block; }
   font-size: 14px;
   text-decoration: none;
   color: var(--text);
+}
+.theme-toggle {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 14px;
+  white-space: nowrap;
 }
 .assignment-link { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
