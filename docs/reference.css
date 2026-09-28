@@ -64,6 +64,11 @@ body {
 
 a { color: var(--accent); }
 code, kbd, pre { font-family: "Cascadia Code", "Consolas", "BIZ UDGothic", monospace; }
+/* 合字（!= が ≠、-> が矢印に見える）を切り、打つ文字どおりに表示する。 */
+code, kbd, pre, .where-file, .fields dt span {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
 p code, li code, dd code, td code, .where code {
   background: var(--surface-2);
   border: 1px solid var(--line);
