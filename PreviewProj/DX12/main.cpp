@@ -38,17 +38,15 @@ namespace
 
     // ---------- 定数とデータの型 ----------
 
-    // BackBuffer の枚数と、1フレームで描く物体の数（床・立方体・四角すい・パネル・画面用の四角形）。
+    // BackBuffer の枚数と、1フレームで描く物体の数（床・立方体・四角すい・パネル）。
     constexpr UINT kFrameCount = 2;
-    constexpr UINT kObjectCount = 5;
+    constexpr UINT kObjectCount = 4;
 
     // DescriptorHeap の中の並び順。
-    // RTV Heap: [0] [1] = BackBuffer、[2] = SceneTexture
-    // SRV Heap: [0] = Icon.png、[1] = SceneTexture
-    constexpr UINT kSceneRtvIndex = kFrameCount;
+    // RTV Heap: [0] [1] = BackBuffer
+    // SRV Heap: [0] = Icon.png
     constexpr UINT kIconSrvIndex = 0;
-    constexpr UINT kSceneSrvIndex = 1;
-    constexpr UINT kSrvCount = 2;
+    constexpr UINT kSrvCount = 1;
 
     // F1 / F2 で切り替える投影方法。
     enum class ProjectionMode
@@ -107,7 +105,6 @@ namespace
         DrawRange cube;
         DrawRange pyramid;
         DrawRange transparentPanel;
-        DrawRange presentQuad;
     };
 
     // Shader の cbuffer SceneConstants（register b0）と同じ形にする。
@@ -412,11 +409,6 @@ namespace
             2.0f);
         geometry.transparentPanel.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.transparentPanel.startIndex;
 
-        // 画面全体を覆う四角形。行列を使わず、-1～1 の座標がそのまま画面の端になる。
-        geometry.presentQuad.startIndex = static_cast<UINT>(geometry.indices.size());
-        AppendQuad(geometry, { -1, -1, 0 }, { -1, 1, 0 }, { 1, 1, 0 }, { 1, -1, 0 }, white);
-        geometry.presentQuad.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.presentQuad.startIndex;
-
         return geometry;
     }
 
@@ -466,7 +458,6 @@ namespace
             UploadSceneResources();
             CreateConstantBuffer();
             CreateDepthBuffer();
-            CreateSceneTexture();
         }
 
         void SetProjectionMode(ProjectionMode mode)
@@ -525,12 +516,34 @@ namespace
             EndFrame();
         }
 
-        // 完成（F6）: SceneTexture へ描いてから、それを画面へ貼る 2-pass 描画。
+        // 完成（F6）: 床・立方体・四角すい・半透明パネルを並べて描く。
         void RenderFullScene()
         {
             BeginFrame();
-            RenderScenePass();
-            RenderPresentPass();
+
+            // 描画先を BackBuffer + Depth にして、両方を初期化する。
+            const float clearColor[4] = { 24.0f / 255.0f, 31.0f / 255.0f, 42.0f / 255.0f, 1.0f };
+            const D3D12_CPU_DESCRIPTOR_HANDLE rtv = CpuHandle(m_rtvHeap.Get(), m_frameIndex, m_rtvDescriptorSize);
+            const D3D12_CPU_DESCRIPTOR_HANDLE dsv = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
+            m_commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
+            m_commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
+            m_commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+            // 共通の設定に加え、不透明用 PSO と Icon.png の SRV（t0）を指定する。
+            BindCommonPipeline();
+            m_commandList->SetPipelineState(m_opaquePSO.Get());
+            m_commandList->SetGraphicsRootDescriptorTable(1, GpuHandle(m_srvHeap.Get(), kIconSrvIndex, m_srvDescriptorSize));
+            const ViewProjectionMatrices matrices = BuildViewProjection(m_projectionMode);
+
+            // 不透明な物体を描く。物体ごとに別の objectIndex（ConstantBuffer の場所）を使う。
+            DrawObject(0, m_geometry.floor, XMMatrixIdentity(), matrices.view, matrices.projection);
+            DrawObject(1, m_geometry.cube, XMMatrixTranslation(-1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);
+            DrawObject(2, m_geometry.pyramid, XMMatrixTranslation(1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);
+
+            // 半透明のパネルは最後に、半透明用の PSO へ切り替えて描く。
+            m_commandList->SetPipelineState(m_alphaBlendPSO.Get());
+            DrawObject(3, m_geometry.transparentPanel, XMMatrixIdentity(), matrices.view, matrices.projection);
+
             EndFrame();
         }
 
@@ -587,10 +600,10 @@ namespace
 
         void CreateDescriptorHeaps()
         {
-            // RTV（描画先）用の DescriptorHeap: BackBuffer 2枚 + SceneTexture 1枚。
+            // RTV（描画先）用の DescriptorHeap: BackBuffer 2枚。
             D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
             rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-            rtvHeapDesc.NumDescriptors = kFrameCount + 1;
+            rtvHeapDesc.NumDescriptors = kFrameCount;
             ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(m_rtvHeap.GetAddressOf())), "CreateDescriptorHeap(RTV) failed.");
 
             // DSV（Depth の書き込み先）用の DescriptorHeap: 1個。
@@ -599,7 +612,7 @@ namespace
             dsvHeapDesc.NumDescriptors = 1;
             ThrowIfFailed(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(m_dsvHeap.GetAddressOf())), "CreateDescriptorHeap(DSV) failed.");
 
-            // SRV（Shader から読む Texture）用の DescriptorHeap: Icon.png と SceneTexture。
+            // SRV（Shader から読む Texture）用の DescriptorHeap: Icon.png の1個。
             // Shader から見えるように SHADER_VISIBLE を付ける。
             D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
             srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -828,13 +841,6 @@ namespace
             alphaTarget.BlendOpAlpha = D3D12_BLEND_OP_ADD;
             alphaDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
             ThrowIfFailed(m_device->CreateGraphicsPipelineState(&alphaDesc, IID_PPV_ARGS(m_alphaBlendPSO.GetAddressOf())), "CreateGraphicsPipelineState(alpha) failed.");
-
-            // 画面へ貼る用 PSO: Depth を使わない。Depth の形式も「なし（UNKNOWN）」にする。
-            D3D12_GRAPHICS_PIPELINE_STATE_DESC presentDesc = opaqueDesc;
-            presentDesc.DepthStencilState.DepthEnable = FALSE;
-            presentDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-            presentDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
-            ThrowIfFailed(m_device->CreateGraphicsPipelineState(&presentDesc, IID_PPV_ARGS(m_presentPSO.GetAddressOf())), "CreateGraphicsPipelineState(present) failed.");
         }
 
         void CreateDefaultBuffer(
@@ -1021,37 +1027,6 @@ namespace
             m_device->CreateDepthStencilView(m_depthBuffer.Get(), nullptr, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
         }
 
-        void CreateSceneTexture()
-        {
-            // 描画先にも、Shader から読む Texture にもなる SceneTexture を作る。
-            // 最初の State は「Shader から読む」。描く直前に Barrier で「描画先」へ切り替える。
-            D3D12_RESOURCE_DESC sceneDesc{};
-            sceneDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-            sceneDesc.Width = kClientWidth;
-            sceneDesc.Height = kClientHeight;
-            sceneDesc.DepthOrArraySize = 1;
-            sceneDesc.MipLevels = 1;
-            sceneDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            sceneDesc.SampleDesc.Count = 1;
-            sceneDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-            sceneDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
-            D3D12_CLEAR_VALUE clearValue{};
-            clearValue.Format = sceneDesc.Format;
-            clearValue.Color[0] = 24.0f / 255.0f;
-            clearValue.Color[1] = 31.0f / 255.0f;
-            clearValue.Color[2] = 42.0f / 255.0f;
-            clearValue.Color[3] = 1.0f;
-            const D3D12_HEAP_PROPERTIES defaultHeap = HeapProperties(D3D12_HEAP_TYPE_DEFAULT);
-            ThrowIfFailed(
-                m_device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &sceneDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &clearValue, IID_PPV_ARGS(m_sceneTexture.GetAddressOf())),
-                "CreateCommittedResource(SceneTexture) failed.");
-
-            // 同じ Resource に、描画先としての RTV と、読み取り元としての SRV を書き込む。
-            m_device->CreateRenderTargetView(m_sceneTexture.Get(), nullptr, CpuHandle(m_rtvHeap.Get(), kSceneRtvIndex, m_rtvDescriptorSize));
-            m_device->CreateShaderResourceView(m_sceneTexture.Get(), nullptr, CpuHandle(m_srvHeap.Get(), kSceneSrvIndex, m_srvDescriptorSize));
-        }
-
         void BindCommonPipeline()
         {
             // RootSignature と、Shader が参照する DescriptorHeap を指定する。
@@ -1086,63 +1061,6 @@ namespace
             m_commandList->DrawIndexedInstanced(range.indexCount, 1, range.startIndex, 0, 0);
         }
 
-        void RenderScenePass()
-        {
-            // SceneTexture を「Shader から読む」から「描画先」へ切り替える。
-            const D3D12_RESOURCE_BARRIER toRenderTarget = TransitionBarrier(
-                m_sceneTexture.Get(),
-                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-                D3D12_RESOURCE_STATE_RENDER_TARGET);
-            m_commandList->ResourceBarrier(1, &toRenderTarget);
-
-            // 1段階目: 描画先を SceneTexture の RTV + Depth にして、両方を初期化する。
-            const float clearColor[4] = { 24.0f / 255.0f, 31.0f / 255.0f, 42.0f / 255.0f, 1.0f };
-            const D3D12_CPU_DESCRIPTOR_HANDLE rtv = CpuHandle(m_rtvHeap.Get(), kSceneRtvIndex, m_rtvDescriptorSize);
-            const D3D12_CPU_DESCRIPTOR_HANDLE dsv = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
-            m_commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
-            m_commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
-            m_commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-            // 共通の設定に加え、不透明用 PSO と Icon.png の SRV（t0）を指定する。
-            BindCommonPipeline();
-            m_commandList->SetPipelineState(m_opaquePSO.Get());
-            m_commandList->SetGraphicsRootDescriptorTable(1, GpuHandle(m_srvHeap.Get(), kIconSrvIndex, m_srvDescriptorSize));
-            const ViewProjectionMatrices matrices = BuildViewProjection(m_projectionMode);
-
-            // 不透明な物体を描く。物体ごとに別の objectIndex（ConstantBuffer の場所）を使う。
-            DrawObject(0, m_geometry.floor, XMMatrixIdentity(), matrices.view, matrices.projection);
-            DrawObject(1, m_geometry.cube, XMMatrixTranslation(-1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);
-            DrawObject(2, m_geometry.pyramid, XMMatrixTranslation(1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);
-
-            // 半透明のパネルは最後に、半透明用の PSO へ切り替えて描く。
-            m_commandList->SetPipelineState(m_alphaBlendPSO.Get());
-            DrawObject(3, m_geometry.transparentPanel, XMMatrixIdentity(), matrices.view, matrices.projection);
-
-            // 描き終えた SceneTexture を「描画先」から「Shader から読む」へ切り替える。
-            const D3D12_RESOURCE_BARRIER toShaderResource = TransitionBarrier(
-                m_sceneTexture.Get(),
-                D3D12_RESOURCE_STATE_RENDER_TARGET,
-                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-            m_commandList->ResourceBarrier(1, &toShaderResource);
-        }
-
-        void RenderPresentPass()
-        {
-            // 2段階目: 描画先を今の BackBuffer の RTV にする（Depth は使わない）。
-            const float clearColor[4] = { 10.0f / 255.0f, 13.0f / 255.0f, 18.0f / 255.0f, 1.0f };
-            const D3D12_CPU_DESCRIPTOR_HANDLE rtv = CpuHandle(m_rtvHeap.Get(), m_frameIndex, m_rtvDescriptorSize);
-            m_commandList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
-            m_commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
-
-            // 画面へ貼る用 PSO にし、t0 に SceneTexture の SRV を指定する。
-            BindCommonPipeline();
-            m_commandList->SetPipelineState(m_presentPSO.Get());
-            m_commandList->SetGraphicsRootDescriptorTable(1, GpuHandle(m_srvHeap.Get(), kSceneSrvIndex, m_srvDescriptorSize));
-
-            // 行列は何も変換しない単位行列にし、presentQuad の -1～1 をそのまま画面の端にする。
-            DrawObject(4, m_geometry.presentQuad, XMMatrixIdentity(), XMMatrixIdentity(), XMMatrixIdentity());
-        }
-
         bool m_debugLayerEnabled = false;
         ComPtr<IDXGIFactory6> m_factory;
         ComPtr<ID3D12Device> m_device;
@@ -1166,7 +1084,6 @@ namespace
         ComPtr<ID3D12RootSignature> m_rootSignature;
         ComPtr<ID3D12PipelineState> m_opaquePSO;
         ComPtr<ID3D12PipelineState> m_alphaBlendPSO;
-        ComPtr<ID3D12PipelineState> m_presentPSO;
 
         SceneGeometry m_geometry;
         ComPtr<ID3D12Resource> m_vertexBuffer;
@@ -1177,7 +1094,6 @@ namespace
         ComPtr<ID3D12Resource> m_constantBuffer;
         std::uint8_t* m_mappedConstants = nullptr;
         ComPtr<ID3D12Resource> m_depthBuffer;
-        ComPtr<ID3D12Resource> m_sceneTexture;
         ProjectionMode m_projectionMode = ProjectionMode::Perspective;
     };
 

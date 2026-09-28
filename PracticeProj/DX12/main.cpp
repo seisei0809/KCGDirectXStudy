@@ -4,12 +4,12 @@
 
 // 進め方
 //   1. ブラウザで docs/reference.html を開き、上のタブで「DirectX 12」を選ぶ。
-//   2. Reference の手順を上から順に進める。書く場所は「TODO 1」「TODO: CreateDevice」のような
+//   2. Reference の手順を上から順に進める。貼る場所は「TODO 1」「TODO: CreateDevice」のような
 //      文字で示されるので、Ctrl + F で検索して見つける。
-//   3. コードはコピー＆ペーストせず、見本を見ながら自分で入力する（コメントも書き写す）。
-//   4. 1手順書くごとに Ctrl + Shift + B でビルドし、エラーが 0 件なのを確かめてから次へ進む。
+//   3. コードは1文ずつ読んでから、文の末尾の「コピー」で貼る。
+//   4. 1手順貼り終えるごとに Ctrl + Shift + B でビルドし、エラーが 0 件なのを確かめてから次へ進む。
 
-// TODO 1: include などの宣言。この行を消して、ここに書く。
+// TODO 1: include などの宣言。この行を消して、ここに貼る。
 
 namespace
 {
@@ -20,15 +20,15 @@ namespace
 
     // ---------- 定数とデータの型 ----------
 
-    // TODO 2: データの型。この行を消して、ここに書く。
+    // TODO 2: データの型。この行を消して、ここに貼る。
 
     // ---------- 補助関数 ----------
 
-    // TODO 3: 補助関数は、この行のすぐ上へ順番に書き足していく。この行は最後まで消さない。
+    // TODO 3: 補助関数は、この行のすぐ上へ順番に貼っていく。この行は最後まで消さない。
 
     // ---------- Renderer ----------
 
-    // TODO 4: Renderer クラス。この行を消して、ここに書く。
+    // TODO 4: Renderer クラス。この行を消して、ここに貼る。
 
     // ---------- ウィンドウ ----------
 
@@ -92,7 +92,7 @@ namespace
     }
 }
 
-// TODO 5: この行から下（wWinMain 全体）を消して、ここに書き直す。
+// TODO 5: この行から下（wWinMain 全体）を消して、ここに貼る。
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)
 {
     const HWND hwnd = CreateMainWindow(instance);

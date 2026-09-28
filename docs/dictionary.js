@@ -80,7 +80,7 @@ const DICTIONARY = {
    ],
    [
     "RenderTarget",
-    "Draw の結果を書き込む描画先です。最終表示用の BackBuffer だけでなく、Texture を中間描画先として使うこともできます。"
+    "Draw の結果を書き込む描画先です。"
    ],
    [
     "Surface",
@@ -88,7 +88,7 @@ const DICTIONARY = {
    ],
    [
     "Texture",
-    "画像の画素を GPU から読むための Resource です。この教材では Icon.png と、Scene を描いた結果の2種類を使います。"
+    "画像の画素を GPU から読むための Resource です。この教材では Icon.png を Texture にして使います。"
    ],
    [
     "Texture Stage",
@@ -107,20 +107,8 @@ const DICTIONARY = {
     "半透明表示のために、新しく描く色とすでに RenderTarget にある色を alpha 値で混ぜる処理です。"
    ],
    [
-    "SceneTexture",
-    "3D Scene をいったん描いて保存する中間 Texture です。最後にこの Texture を BackBuffer へ貼って表示します。"
-   ],
-   [
-    "Scene Pass / Present Pass",
-    "Scene Pass は3D Scene を SceneTexture へ描く処理、Present Pass はその SceneTexture を BackBuffer へ描く処理です。"
-   ],
-   [
     "Indexed Draw",
     "頂点を直接順番に並べるのではなく、IndexBuffer の番号で再利用しながら三角形を描く方法です。"
-   ],
-   [
-    "Fullscreen Quad",
-    "画面全体を覆う長方形です。SceneTexture をこの Quad に貼って描くことで、中間描画結果を BackBuffer 全体へ表示します。"
    ],
    [
     "Present",
@@ -281,18 +269,6 @@ const DICTIONARY = {
     "HLSL のスロット番号です。b0 は ConstantBuffer、t0 は Texture、s0 は Sampler を表し、C++ 側で同じ番号へ設定します。"
    ],
    [
-    "Offscreen RenderTarget",
-    "BackBuffer ではない Texture へ Scene を先に描き、その Texture を次の描画で読み取るための中間描画先です。"
-   ],
-   [
-    "SceneTexture",
-    "3D Scene をいったん描いて保存する中間 Texture です。Scene Pass では RTV、Present Pass では SRV として同じ Resource を使います。"
-   ],
-   [
-    "Scene Pass / Present Pass",
-    "Scene Pass は3D Scene を SceneTexture へ描く処理、Present Pass は SceneTexture を読み取って BackBuffer へ描く処理です。"
-   ],
-   [
     "WVP",
     "World・View・Projection の3つの行列をまとめた呼び方です。物体の座標を最終的な画面座標へ変換します。"
    ],
@@ -303,10 +279,6 @@ const DICTIONARY = {
    [
     "Indexed Draw",
     "IndexBuffer の番号を使って頂点を再利用しながら三角形を描く方法です。DX11 では DrawIndexed を使います。"
-   ],
-   [
-    "Fullscreen Quad",
-    "画面全体を覆う長方形です。SceneTexture を Texture として読み、その結果を BackBuffer 全体へ表示するために使います。"
    ],
    [
     "Present",
@@ -487,14 +459,6 @@ const DICTIONARY = {
     "DescriptorHeap 内のスロットを指す値です。CPU Handle は Descriptor 作成や RenderTarget 設定、GPU Handle は Shader から読む Descriptor の指定に使います。"
    ],
    [
-    "SceneTexture",
-    "3D Scene をいったん描いて保存する中間 Texture です。RENDER_TARGET と PIXEL_SHADER_RESOURCE の間を ResourceBarrier で切り替えます。"
-   ],
-   [
-    "Scene Pass / Present Pass",
-    "Scene Pass は SceneTexture へ3D Scene を描く処理、Present Pass はその SceneTexture を BackBuffer へ描く処理です。"
-   ],
-   [
     "WVP",
     "World・View・Projection の3つの行列をまとめた呼び方です。物体の座標を最終的な画面座標へ変換します。"
    ],
@@ -505,10 +469,6 @@ const DICTIONARY = {
    [
     "Indexed Draw",
     "IndexBuffer の番号を使って頂点を再利用しながら三角形を描く方法です。DX12 では DrawIndexedInstanced を使います。"
-   ],
-   [
-    "Fullscreen Quad",
-    "画面全体を覆う長方形です。SceneTexture を Shader から読み、BackBuffer 全体へ表示する Present Pass で使います。"
    ],
    [
     "Present",
@@ -542,7 +502,7 @@ const DICTIONARY = {
    "name": "Resource と View / Descriptor",
    "short": "実体と『どう見るか』は別物",
    "beginner": "Texture2D や Buffer が Resource 本体です。同じ Texture を『描画先』として使うなら RTV、『Shader から読む』なら SRV、『Depth』なら DSV という見え方を用意します。",
-   "why": "1つのメモリを用途ごとに別オブジェクトへコピーするのではなく、同じ Resource に対して用途を表す View を作れるからです。今回の Offscreen Texture は RTV と SRV の両方を持ちます。",
+   "why": "1つのメモリを用途ごとに別オブジェクトへコピーするのではなく、同じ Resource に対して用途を表す View を作れるからです。",
    "advanced": "DX11 の View は COM Object ですが、DX12 の RTV/SRV/DSV は DescriptorHeap の slot に書かれる Descriptor です。DX12 では Descriptor の寿命・slot・CPU/GPU handle の区別までアプリ側の管理対象になります。"
   },
   {
@@ -586,13 +546,6 @@ const DICTIONARY = {
    "beginner": "BackBuffer は今から描く画面用 Texture、Present は完成した BackBuffer を表示側へ渡す処理です。SwapChain は複数 BackBuffer を順番に回します。",
    "why": "表示中の画像へ直接書き込むのではなく、裏で次のフレームを描き、完成後に切り替えることで tearing や待ちを制御できます。",
    "advanced": "DX12 の flip model では Present 後に現在の BackBuffer index が進みます。BackBuffer Resource は Present 前に PRESENT state に戻す必要があります。syncInterval は VSync の挙動にも関係します。"
-  },
-  {
-   "name": "Offscreen RenderTarget と 2-pass",
-   "short": "一度描いた画像をもう一度入力にする",
-   "beginner": "Scene を直接 BackBuffer へ描かず、別 Texture へ描きます。その Texture を次の Draw で読み、Fullscreen Quad に貼って BackBuffer へ出します。",
-   "why": "同じ Texture を『出力』と『入力』の両方で使うことで、Resource/View/State の違いが一度に理解できます。PostEffect や ShadowMap も同じ発想の延長です。",
-   "advanced": "DX11 では同一 subresource を RTV と SRV に同時 bind できないため hazard があり、Runtime が競合 binding を解除・警告します。DX12 では用途切替を ResourceBarrier で明示します。"
   },
   {
    "name": "UploadHeap / DefaultHeap / Resource Lifetime",
@@ -890,7 +843,7 @@ const DICTIONARY = {
     [
      "ID3D11Texture2D",
      "Resource",
-     "BackBuffer、Depth、Icon、Offscreen SceneTexture の実データを保持します。"
+     ""
     ],
     [
      "ID3D11ShaderResourceView",
@@ -899,7 +852,7 @@ const DICTIONARY = {
     ]
    ],
    "used": "CreateTexture2D / CreateShaderResourceView。",
-   "deep": "Offscreen Texture は1つの ID3D11Texture2D に RTV と SRV の両方を作り、pass ごとに用途を切り替えます。"
+   "deep": ""
   },
   {
    "name": "D3D11_BUFFER_DESC",
@@ -1016,7 +969,7 @@ const DICTIONARY = {
     ]
    ],
    "used": "ID3D11Device::CreateTexture2D。",
-   "deep": "Offscreen Texture は RENDER_TARGET と SHADER_RESOURCE の両 BindFlags を持つため、同じ Resource に RTV と SRV を作れます。"
+   "deep": ""
   },
   {
    "name": "D3D11_INPUT_ELEMENT_DESC",
@@ -1231,7 +1184,7 @@ const DICTIONARY = {
     [
      "ID3D12Resource",
      "Buffer / Texture",
-     "Vertex、Index、Constant、Depth、BackBuffer、Offscreen、Upload の実体を同じ Resource Interface で扱います。"
+     ""
     ],
     [
      "ID3D12CommandList",
@@ -1274,12 +1227,12 @@ const DICTIONARY = {
     [
      "PIXEL_SHADER_RESOURCE",
      "PixelShader から読む",
-     "Icon Texture や SceneTexture を SRV として sample するときに使います。"
+     ""
     ],
     [
      "RENDER_TARGET",
      "Color 出力先",
-     "SceneTexture や BackBuffer を RTV として描画するときに使います。"
+     ""
     ],
     [
      "PRESENT",
@@ -1930,7 +1883,7 @@ const DICTIONARY = {
     ]
    ],
    "used": "D3D12_GRAPHICS_PIPELINE_STATE_DESC::DepthStencilState。",
-   "deep": "Depth Resource/DSVは保存先、DepthStencilStateは比較規則です。Present PassではDepthを使わないPSOへ切り替えます。"
+   "deep": "Depth Resource/DSVは保存先、DepthStencilStateは比較規則です。"
   },
   {
    "name": "D3D12_INPUT_ELEMENT_DESC",
@@ -3001,7 +2954,7 @@ const DICTIONARY = {
     ]
    ],
    "returns": "HRESULT。",
-   "when": "PNG upload / Offscreen 作成。",
+   "when": "",
    "example": "device->CreateTexture(w,h,1,0,D3DFMT_A8R8G8B8,D3DPOOL_MANAGED,texture.GetAddressOf(),nullptr);",
    "tips": [],
    "notes": {
@@ -3044,46 +2997,6 @@ const DICTIONARY = {
     "fail": "width*4をPitchだと思い込む、Unlock後のpBitsを使う、Lockできないpool/usageのTextureをLockする、が典型です。",
     "deep": "Lockは単なるpointer取得ではなくRuntimeとの同期点になり得ます。頻繁な更新ではusage/lock flagの選択が性能に影響します。"
    }
-  },
-  {
-   "name": "IDirect3DTexture9::GetSurfaceLevel",
-   "group": "dx9",
-   "signature": "HRESULT GetSurfaceLevel(UINT level, IDirect3DSurface9** surface);",
-   "summary": "Texture の Mip Level を RenderTarget として扱うため Surface Interface を取得します。",
-   "params": [
-    [
-     "level",
-     "0。"
-    ],
-    [
-     "surface",
-     "IDirect3DSurface9 の受け取り先。"
-    ]
-   ],
-   "returns": "HRESULT。",
-   "when": "D3DUSAGE_RENDERTARGET Texture 作成後。",
-   "example": "sceneTexture->GetSurfaceLevel(0, sceneSurface.GetAddressOf());",
-   "tips": []
-  },
-  {
-   "name": "IDirect3DDevice9::GetRenderTarget / SetRenderTarget",
-   "group": "dx9",
-   "signature": "HRESULT GetRenderTarget(DWORD index, IDirect3DSurface9** surface);\nHRESULT SetRenderTarget(DWORD index, IDirect3DSurface9* surface);",
-   "summary": "現在の BackBuffer Surface を保存し、描画先を Offscreen Surface / BackBuffer へ切り替えます。",
-   "params": [
-    [
-     "index",
-     "MRT slot。今回 0。"
-    ],
-    [
-     "surface",
-     "Get は受け取り先、Set は設定する Surface。"
-    ]
-   ],
-   "returns": "HRESULT。",
-   "when": "2-pass rendering。",
-   "example": "device->GetRenderTarget(0, backBuffer.GetAddressOf());\ndevice->SetRenderTarget(0, sceneSurface.Get());",
-   "tips": []
   },
   {
    "name": "IDirect3DDevice9::SetFVF",
@@ -3157,11 +3070,11 @@ const DICTIONARY = {
     ],
     [
      "texture",
-     "PNG Texture または Offscreen Texture。nullptr で解除。"
+     "nullptr で解除。"
     ]
    ],
    "returns": "HRESULT。",
-   "when": "Scene Pass / Present Pass。",
+   "when": "",
    "example": "device->SetTexture(0, texture.Get());",
    "tips": []
   },
@@ -3468,7 +3381,7 @@ const DICTIONARY = {
    "name": "ID3D11Device::CreateTexture2D",
    "group": "dx11",
    "signature": "HRESULT CreateTexture2D(const D3D11_TEXTURE2D_DESC* desc, const D3D11_SUBRESOURCE_DATA* initialData, ID3D11Texture2D** texture);",
-   "summary": "2D Texture Resource を作成します。PNG、Depth、Offscreen RenderTarget で使用します。",
+   "summary": "2D Texture Resource を作成します。",
    "params": [
     [
      "desc",
@@ -3488,7 +3401,7 @@ const DICTIONARY = {
    "example": "device->CreateTexture2D(&desc, &data, texture.GetAddressOf());",
    "tips": [],
    "notes": {
-    "beginner": "Texture本体を作ります。『画像Texture』『Depth Texture』『Offscreen RenderTarget』は同じTexture2DでもDescの用途が違います。",
+    "beginner": "Texture本体を作ります。",
     "pre": "Format、Usage、BindFlags、初期dataの組合せを用途に合わせます。",
     "fail": "BGRA pixelへRGBA formatを指定する、IMMUTABLEなのにinitialDataがない、RenderTarget/SRV両方使うのにBindFlagsが片方だけ、などが典型です。",
     "deep": "Resource本体とViewを分けて考えるのがDX11の核心です。同じTexture2DにRTVとSRVを作れるのは、Resourceが両方のBindFlagsを持つ場合です。"
@@ -3514,7 +3427,7 @@ const DICTIONARY = {
     ]
    ],
    "returns": "HRESULT。",
-   "when": "BackBuffer / Offscreen 作成後。",
+   "when": "",
    "example": "device->CreateRenderTargetView(texture.Get(), nullptr, rtv.GetAddressOf());",
    "tips": [],
    "notes": {
@@ -3544,13 +3457,13 @@ const DICTIONARY = {
     ]
    ],
    "returns": "HRESULT。",
-   "when": "PNG / Offscreen Texture 作成後。",
+   "when": "",
    "example": "device->CreateShaderResourceView(texture.Get(), nullptr, srv.GetAddressOf());",
    "tips": [],
    "notes": {
     "beginner": "TextureをShaderから読むためのViewです。HLSLのTexture2D register(t#)へbindするのはこのSRVです。",
     "pre": "ResourceにSHADER_RESOURCE BindFlagがあり、View formatが互換である必要があります。",
-    "fail": "Offscreen TextureをRTVとしてbindしたまま同じsubresourceのSRVをPSへbindするとhazardになります。",
+    "fail": "",
     "deep": "DX11 Runtimeは同時read/write hazardを検出すると競合bindingをNULLへ置き換えたりDebug warningを出します。DX12ではRuntime任せではなくBarrier/state管理へ移ります。"
    }
   },
@@ -4029,7 +3942,7 @@ const DICTIONARY = {
     ],
     [
      "dsv",
-     "Scene Pass は DSV、Present Pass は nullptr。"
+     ""
     ]
    ],
    "returns": "なし。",
@@ -4285,7 +4198,7 @@ const DICTIONARY = {
     ],
     [
      "pFullscreenDesc",
-     "Fullscreen設定。Windowedで使うため nullptr。"
+     "Windowedで使うため nullptr。"
     ],
     [
      "pRestrictToOutput",
@@ -4299,26 +4212,6 @@ const DICTIONARY = {
    "returns": "HRESULT。",
    "when": "CommandQueue 作成後。",
    "example": "factory->CreateSwapChainForHwnd(queue.Get(), hwnd, &desc, nullptr, nullptr, swap1.GetAddressOf());",
-   "tips": []
-  },
-  {
-   "name": "IDXGIFactory::MakeWindowAssociation",
-   "group": "dx12",
-   "signature": "HRESULT MakeWindowAssociation(HWND hwnd, UINT flags);",
-   "summary": "DXGI が Window に対して行う自動動作を制御します。",
-   "params": [
-    [
-     "hwnd",
-     "SwapChain の Window。"
-    ],
-    [
-     "flags",
-     "DXGI_MWA_NO_ALT_ENTER で Alt+Enter の自動 fullscreen 切り替えを無効化。"
-    ]
-   ],
-   "returns": "HRESULT。",
-   "when": "SwapChain 作成後。",
-   "example": "factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);",
    "tips": []
   },
   {
@@ -4382,7 +4275,7 @@ const DICTIONARY = {
    "params": [
     [
      "pResource",
-     "Viewを作る対象Resource。今回RTVはBackBuffer/Offscreen、DSVはDepth、SRVはIcon/Offscreen Texture。"
+     "Viewを作る対象Resource。"
     ],
     [
      "pDesc",
@@ -4572,7 +4465,7 @@ const DICTIONARY = {
    "notes": {
     "beginner": "Shader、Blend、Depth、Rasterizer、InputLayout、RenderTarget FormatなどDrawに必要な状態を1つへ固定します。",
     "pre": "RootSignature、Shader bytecode、RTV/DSV format等を全て整合させます。",
-    "fail": "SwapChain/OffscreenのRTV FormatとPSOが違う、DepthなしPassなのに不整合DSV設定、RootSignatureとShader bindingが合わない、などが典型です。",
+    "fail": "",
     "deep": "DX9/11のDraw時state validationを前倒ししやすくする設計です。実運用ではshader variant×blend×depth等でPSO数が増えるためcache戦略が必要です。"
    }
   },
@@ -4784,7 +4677,7 @@ const DICTIONARY = {
     ]
    ],
    "returns": "なし。",
-   "when": "COPY_DEST→PIXEL_SHADER_RESOURCE、PRESENT↔RENDER_TARGET、Offscreen の RENDER_TARGET↔PIXEL_SHADER_RESOURCE で使用。",
+   "when": "",
    "example": "auto b = TransitionBarrier(scene.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET); list->ResourceBarrier(1,&b);",
    "tips": [
     "StateBefore は実際の現在 state と一致させます。",
@@ -4988,7 +4881,7 @@ const DICTIONARY = {
     ],
     [
      "dsv",
-     "Scene Pass は DSV、Present Pass は nullptr。"
+     ""
     ]
    ],
    "returns": "なし。",

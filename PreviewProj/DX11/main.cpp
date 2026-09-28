@@ -91,7 +91,6 @@ namespace
         DrawRange cube;
         DrawRange pyramid;
         DrawRange transparentPanel;
-        DrawRange presentQuad;
     };
 
     // Shader の cbuffer SceneConstants（register b0）と同じ形にする。
@@ -336,11 +335,6 @@ namespace
             2.0f);
         geometry.transparentPanel.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.transparentPanel.startIndex;
 
-        // 画面全体を覆う四角形。行列を使わず、-1～1 の座標がそのまま画面の端になる。
-        geometry.presentQuad.startIndex = static_cast<UINT>(geometry.indices.size());
-        AppendQuad(geometry, { -1, -1, 0 }, { -1, 1, 0 }, { 1, 1, 0 }, { 1, -1, 0 }, white);
-        geometry.presentQuad.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.presentQuad.startIndex;
-
         return geometry;
     }
 
@@ -378,7 +372,6 @@ namespace
             CreateIconTexture();
             CreateDepthBuffer();
             CreatePipelineStates();
-            CreateSceneTexture();
         }
 
         void SetProjectionMode(ProjectionMode mode)
@@ -432,11 +425,32 @@ namespace
             ThrowIfFailed(m_swapChain->Present(1, 0), "IDXGISwapChain::Present failed.");
         }
 
-        // 完成（F6）: SceneTexture へ描いてから、それを画面へ貼る 2-pass 描画。
+        // 完成（F6）: 床・立方体・四角すい・半透明パネルを並べて描く。
         void RenderFullScene()
         {
-            RenderScenePass();
-            RenderPresentPass();
+            // 描画先を BackBuffer + Depth にして、両方を初期化する。
+            const float clearColor[4] = { 24.0f / 255.0f, 31.0f / 255.0f, 42.0f / 255.0f, 1.0f };
+            m_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), m_depthStencilView.Get());
+            m_context->ClearRenderTargetView(m_backBufferRTV.Get(), clearColor);
+            m_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+            // 共通の設定に加え、Icon.png・奥行きあり・不透明の State を接続する。
+            BindCommonPipeline();
+            m_context->PSSetShaderResources(0, 1, m_iconSRV.GetAddressOf());
+            m_context->OMSetDepthStencilState(m_depthWriteState.Get(), 0);
+            m_context->OMSetBlendState(m_opaqueBlendState.Get(), nullptr, 0xFFFFFFFF);
+            const ViewProjectionMatrices matrices = BuildViewProjection(m_projectionMode);
+
+            // 不透明な物体を描く。同じ形でも World 行列を変えれば別の場所に置ける。
+            DrawObject(m_geometry.floor, XMMatrixIdentity(), matrices.view, matrices.projection);
+            DrawObject(m_geometry.cube, XMMatrixTranslation(-1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);
+            DrawObject(m_geometry.pyramid, XMMatrixTranslation(1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);
+
+            // 半透明のパネルは最後に描く。State Object を「混ぜる」「Depth は書かない」ものへ差し替える。
+            m_context->OMSetBlendState(m_alphaBlendState.Get(), nullptr, 0xFFFFFFFF);
+            m_context->OMSetDepthStencilState(m_depthReadOnlyState.Get(), 0);
+            DrawObject(m_geometry.transparentPanel, XMMatrixIdentity(), matrices.view, matrices.projection);
+
             ThrowIfFailed(m_swapChain->Present(1, 0), "IDXGISwapChain::Present failed.");
         }
 
@@ -669,7 +683,7 @@ namespace
             rasterizerDesc.DepthClipEnable = TRUE;
             ThrowIfFailed(m_device->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf()), "CreateRasterizerState failed.");
 
-            // Depth の3種類: 判定して書き込む（不透明）/ 判定だけ（半透明）/ 使わない（画面へ貼るとき）。
+            // Depth の2種類: 判定して書き込む（不透明）/ 判定だけ（半透明）。
             D3D11_DEPTH_STENCIL_DESC depthWriteDesc{};
             depthWriteDesc.DepthEnable = TRUE;
             depthWriteDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -679,12 +693,6 @@ namespace
             D3D11_DEPTH_STENCIL_DESC depthReadOnlyDesc = depthWriteDesc;
             depthReadOnlyDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
             ThrowIfFailed(m_device->CreateDepthStencilState(&depthReadOnlyDesc, m_depthReadOnlyState.GetAddressOf()), "CreateDepthStencilState(read only) failed.");
-
-            D3D11_DEPTH_STENCIL_DESC depthDisabledDesc{};
-            depthDisabledDesc.DepthEnable = FALSE;
-            depthDisabledDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-            depthDisabledDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-            ThrowIfFailed(m_device->CreateDepthStencilState(&depthDisabledDesc, m_depthDisabledState.GetAddressOf()), "CreateDepthStencilState(disabled) failed.");
 
             // Blend の2種類: 上書き（不透明）/ alpha で混ぜる（半透明）。
             // 半透明の式: 結果 = 新しい色 × alpha + 今の色 × (1 - alpha)
@@ -703,33 +711,6 @@ namespace
             alphaTarget.DestBlendAlpha = D3D11_BLEND_ZERO;
             alphaTarget.BlendOpAlpha = D3D11_BLEND_OP_ADD;
             ThrowIfFailed(m_device->CreateBlendState(&alphaBlendDesc, m_alphaBlendState.GetAddressOf()), "CreateBlendState(alpha) failed.");
-        }
-
-        void CreateSceneTexture()
-        {
-            // 描画先にも、Shader から読む Texture にもなる SceneTexture を作る。
-            // BindFlags に2つの用途（RENDER_TARGET と SHADER_RESOURCE）を両方指定する。
-            D3D11_TEXTURE2D_DESC sceneDesc{};
-            sceneDesc.Width = kClientWidth;
-            sceneDesc.Height = kClientHeight;
-            sceneDesc.MipLevels = 1;
-            sceneDesc.ArraySize = 1;
-            sceneDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            sceneDesc.SampleDesc.Count = 1;
-            sceneDesc.Usage = D3D11_USAGE_DEFAULT;
-            sceneDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-            ComPtr<ID3D11Texture2D> sceneTexture;
-            ThrowIfFailed(
-                m_device->CreateTexture2D(&sceneDesc, nullptr, sceneTexture.GetAddressOf()),
-                "CreateTexture2D(SceneTexture) failed.");
-
-            // 同じ Texture に、用途ごとの View を2つ作る。描くときは RTV、読むときは SRV。
-            ThrowIfFailed(
-                m_device->CreateRenderTargetView(sceneTexture.Get(), nullptr, m_sceneRTV.GetAddressOf()),
-                "CreateRenderTargetView(SceneTexture) failed.");
-            ThrowIfFailed(
-                m_device->CreateShaderResourceView(sceneTexture.Get(), nullptr, m_sceneSRV.GetAddressOf()),
-                "CreateShaderResourceView(SceneTexture) failed.");
         }
 
         void BindCommonPipeline()
@@ -766,54 +747,6 @@ namespace
             m_context->DrawIndexed(range.indexCount, range.startIndex, 0);
         }
 
-        void RenderScenePass()
-        {
-            // SceneTexture は前のフレームで SRV（読み取り元）として接続されたまま。
-            // 同じ Texture を「読みながら描く」ことはできないので、先に SRV の接続を外す。
-            ID3D11ShaderResourceView* nullSRV = nullptr;
-            m_context->PSSetShaderResources(0, 1, &nullSRV);
-
-            // 1段階目: 描画先を SceneTexture の RTV + Depth にして、両方を初期化する。
-            const float clearColor[4] = { 24.0f / 255.0f, 31.0f / 255.0f, 42.0f / 255.0f, 1.0f };
-            m_context->OMSetRenderTargets(1, m_sceneRTV.GetAddressOf(), m_depthStencilView.Get());
-            m_context->ClearRenderTargetView(m_sceneRTV.Get(), clearColor);
-            m_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-
-            // 共通の設定に加え、Icon.png・奥行きあり・不透明の State を接続する。
-            BindCommonPipeline();
-            m_context->PSSetShaderResources(0, 1, m_iconSRV.GetAddressOf());
-            m_context->OMSetDepthStencilState(m_depthWriteState.Get(), 0);
-            m_context->OMSetBlendState(m_opaqueBlendState.Get(), nullptr, 0xFFFFFFFF);
-            const ViewProjectionMatrices matrices = BuildViewProjection(m_projectionMode);
-
-            // 不透明な物体を描く。同じ形でも World 行列を変えれば別の場所に置ける。
-            DrawObject(m_geometry.floor, XMMatrixIdentity(), matrices.view, matrices.projection);
-            DrawObject(m_geometry.cube, XMMatrixTranslation(-1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);
-            DrawObject(m_geometry.pyramid, XMMatrixTranslation(1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);
-
-            // 半透明のパネルは最後に描く。State Object を「混ぜる」「Depth は書かない」ものへ差し替える。
-            m_context->OMSetBlendState(m_alphaBlendState.Get(), nullptr, 0xFFFFFFFF);
-            m_context->OMSetDepthStencilState(m_depthReadOnlyState.Get(), 0);
-            DrawObject(m_geometry.transparentPanel, XMMatrixIdentity(), matrices.view, matrices.projection);
-        }
-
-        void RenderPresentPass()
-        {
-            // 2段階目: 描画先を BackBuffer の RTV にする（Depth は使わない）。
-            const float clearColor[4] = { 10.0f / 255.0f, 13.0f / 255.0f, 18.0f / 255.0f, 1.0f };
-            m_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), nullptr);
-            m_context->ClearRenderTargetView(m_backBufferRTV.Get(), clearColor);
-
-            // さっき RTV で描いた SceneTexture を、今度は SRV（読み取り元）として Shader へ渡す。
-            BindCommonPipeline();
-            m_context->PSSetShaderResources(0, 1, m_sceneSRV.GetAddressOf());
-            m_context->OMSetDepthStencilState(m_depthDisabledState.Get(), 0);
-            m_context->OMSetBlendState(m_opaqueBlendState.Get(), nullptr, 0xFFFFFFFF);
-
-            // 行列は何も変換しない単位行列にし、presentQuad の -1～1 をそのまま画面の端にする。
-            DrawObject(m_geometry.presentQuad, XMMatrixIdentity(), XMMatrixIdentity(), XMMatrixIdentity());
-        }
-
         ComPtr<ID3D11Device> m_device;
         ComPtr<ID3D11DeviceContext> m_context;
         ComPtr<IDXGISwapChain> m_swapChain;
@@ -830,11 +763,8 @@ namespace
         ComPtr<ID3D11RasterizerState> m_rasterizerState;
         ComPtr<ID3D11DepthStencilState> m_depthWriteState;
         ComPtr<ID3D11DepthStencilState> m_depthReadOnlyState;
-        ComPtr<ID3D11DepthStencilState> m_depthDisabledState;
         ComPtr<ID3D11BlendState> m_opaqueBlendState;
         ComPtr<ID3D11BlendState> m_alphaBlendState;
-        ComPtr<ID3D11RenderTargetView> m_sceneRTV;
-        ComPtr<ID3D11ShaderResourceView> m_sceneSRV;
         SceneGeometry m_geometry;
         ProjectionMode m_projectionMode = ProjectionMode::Perspective;
     };

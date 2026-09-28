@@ -92,7 +92,6 @@ namespace
         DrawRange cube;
         DrawRange pyramid;
         DrawRange transparentPanel;
-        DrawRange presentQuad;
     };
 
     // ---------- 補助関数 ----------
@@ -279,11 +278,6 @@ namespace
             2.0f);
         geometry.transparentPanel.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.transparentPanel.startIndex;
 
-        // 画面全体を覆う四角形。行列を使わず、-1～1 の座標がそのまま画面の端になる。
-        geometry.presentQuad.startIndex = static_cast<UINT>(geometry.indices.size());
-        AppendQuad(geometry, { -1, -1, 0 }, { -1, 1, 0 }, { 1, 1, 0 }, { 1, -1, 0 }, white);
-        geometry.presentQuad.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.presentQuad.startIndex;
-
         return geometry;
     }
 
@@ -328,7 +322,6 @@ namespace
             CreateDevice(hwnd);
             CreateGeometryBuffers();
             CreateIconTexture();
-            CreateSceneTexture();
             ConfigureFixedFunctionPipeline();
         }
 
@@ -384,11 +377,39 @@ namespace
             PresentFrame();
         }
 
-        // 完成（F6）: SceneTexture へ描いてから、それを画面へ貼る 2-pass 描画。
+        // 完成（F6）: 床・立方体・四角すい・半透明パネルを並べて描く。
         void RenderFullScene()
         {
-            RenderScenePass();
-            RenderPresentPass();
+            // 背景色と奥行き（Depth）を初期化する。
+            ThrowIfFailed(
+                m_device->Clear(0, nullptr, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(24, 31, 42), 1.0f, 0),
+                "IDirect3DDevice9::Clear failed.");
+            ThrowIfFailed(m_device->BeginScene(), "IDirect3DDevice9::BeginScene failed.");
+
+            // Icon.png・奥行き判定・カメラを設定する。
+            m_device->SetTexture(0, m_iconTexture.Get());
+            m_device->SetRenderState(D3DRS_ZENABLE, TRUE);
+            m_device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
+            m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+            SetCameraTransforms();
+
+            // 不透明な物体を描く。同じ形でも World 行列を変えれば別の場所に置ける。
+            DrawObject(m_geometry.floor, XMMatrixIdentity());
+            DrawObject(m_geometry.cube, XMMatrixTranslation(-1.65f, 0.0f, 0.0f));
+            DrawObject(m_geometry.pyramid, XMMatrixTranslation(1.65f, 0.0f, 0.0f));
+
+            // 半透明のパネルは最後に描く。色を混ぜる設定にし、Depth は書き込まない。
+            m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+            m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            m_device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+            DrawObject(m_geometry.transparentPanel, XMMatrixIdentity());
+
+            // 変えた設定を元に戻す。DX9 の設定は Device に残り続け、次の Draw にも効くため。
+            m_device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
+            m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+
+            ThrowIfFailed(m_device->EndScene(), "IDirect3DDevice9::EndScene failed.");
             PresentFrame();
         }
 
@@ -508,33 +529,6 @@ namespace
             ThrowIfFailed(m_iconTexture->UnlockRect(0), "IDirect3DTexture9::UnlockRect failed.");
         }
 
-        void CreateSceneTexture()
-        {
-            // 今の描画先（= BackBuffer）を覚えておく。2-pass の最後にここへ戻す。
-            ThrowIfFailed(
-                m_device->GetRenderTarget(0, m_backBufferSurface.GetAddressOf()),
-                "IDirect3DDevice9::GetRenderTarget failed.");
-
-            // 描画先にも Texture にもなる SceneTexture を作る（D3DUSAGE_RENDERTARGET）。
-            // 描画先にする Texture は D3DPOOL_DEFAULT（GPU メモリ）に置く決まり。
-            ThrowIfFailed(
-                m_device->CreateTexture(
-                    kClientWidth,
-                    kClientHeight,
-                    1,
-                    D3DUSAGE_RENDERTARGET,
-                    D3DFMT_A8R8G8B8,
-                    D3DPOOL_DEFAULT,
-                    m_sceneTexture.GetAddressOf(),
-                    nullptr),
-                "Create SceneTexture failed.");
-
-            // SetRenderTarget は Texture ではなく Surface（1枚の画像面）を受け取るため、取り出しておく。
-            ThrowIfFailed(
-                m_sceneTexture->GetSurfaceLevel(0, m_sceneSurface.GetAddressOf()),
-                "IDirect3DTexture9::GetSurfaceLevel failed.");
-        }
-
         void ConfigureFixedFunctionPipeline()
         {
             // 頂点の形式と、読み込む VertexBuffer / IndexBuffer を設定する。
@@ -589,73 +583,11 @@ namespace
                 "IDirect3DDevice9::DrawIndexedPrimitive failed.");
         }
 
-        void RenderScenePass()
-        {
-            // 1段階目: 描画先を SceneTexture に切り替え、背景色と Depth を初期化する。
-            ThrowIfFailed(m_device->SetRenderTarget(0, m_sceneSurface.Get()), "SetRenderTarget(SceneTexture) failed.");
-            ThrowIfFailed(
-                m_device->Clear(0, nullptr, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(24, 31, 42), 1.0f, 0),
-                "Clear(SceneTexture) failed.");
-            ThrowIfFailed(m_device->BeginScene(), "BeginScene(scene) failed.");
-
-            // Icon.png・奥行き判定・カメラを設定する。
-            m_device->SetTexture(0, m_iconTexture.Get());
-            m_device->SetRenderState(D3DRS_ZENABLE, TRUE);
-            m_device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
-            m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-            SetCameraTransforms();
-
-            // 不透明な物体を描く。同じ形でも World 行列を変えれば別の場所に置ける。
-            DrawObject(m_geometry.floor, XMMatrixIdentity());
-            DrawObject(m_geometry.cube, XMMatrixTranslation(-1.65f, 0.0f, 0.0f));
-            DrawObject(m_geometry.pyramid, XMMatrixTranslation(1.65f, 0.0f, 0.0f));
-
-            // 半透明のパネルは最後に描く。色を混ぜる設定にし、Depth は書き込まない。
-            m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-            m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-            m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-            m_device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-            DrawObject(m_geometry.transparentPanel, XMMatrixIdentity());
-
-            // 変えた設定を元に戻す。DX9 の設定は Device に残り続け、次の Draw にも効くため。
-            m_device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
-            m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-            ThrowIfFailed(m_device->EndScene(), "EndScene(scene) failed.");
-        }
-
-        void RenderPresentPass()
-        {
-            // 2段階目: 描画先を BackBuffer に戻す。
-            ThrowIfFailed(m_device->SetRenderTarget(0, m_backBufferSurface.Get()), "SetRenderTarget(BackBuffer) failed.");
-            ThrowIfFailed(
-                m_device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(10, 13, 18), 1.0f, 0),
-                "Clear(BackBuffer) failed.");
-            ThrowIfFailed(m_device->BeginScene(), "BeginScene(present) failed.");
-
-            // さっき描いた SceneTexture を、今度は「貼る画像」として使う。
-            m_device->SetTexture(0, m_sceneTexture.Get());
-            m_device->SetRenderState(D3DRS_ZENABLE, FALSE);
-
-            // 行列は何も変換しない単位行列にし、presentQuad の -1～1 をそのまま画面の端にする。
-            // DX9 だけの注意: 画素の中心と Texture の画素の中心が 0.5 画素ずれるため、
-            // 四角形を左上へ 0.5 画素ずらして、ぼやけないようにする。
-            const D3DMATRIX identity = ToD3DMatrix(XMMatrixIdentity());
-            m_device->SetTransform(D3DTS_VIEW, &identity);
-            m_device->SetTransform(D3DTS_PROJECTION, &identity);
-            const XMMATRIX halfPixelOffset = XMMatrixTranslation(-1.0f / kClientWidth, 1.0f / kClientHeight, 0.0f);
-            DrawObject(m_geometry.presentQuad, halfPixelOffset);
-
-            ThrowIfFailed(m_device->EndScene(), "EndScene(present) failed.");
-        }
-
         ComPtr<IDirect3D9> m_d3d;
         ComPtr<IDirect3DDevice9> m_device;
         ComPtr<IDirect3DVertexBuffer9> m_vertexBuffer;
         ComPtr<IDirect3DIndexBuffer9> m_indexBuffer;
         ComPtr<IDirect3DTexture9> m_iconTexture;
-        ComPtr<IDirect3DTexture9> m_sceneTexture;
-        ComPtr<IDirect3DSurface9> m_sceneSurface;
-        ComPtr<IDirect3DSurface9> m_backBufferSurface;
         SceneGeometry m_geometry;
         ProjectionMode m_projectionMode = ProjectionMode::Perspective;
     };

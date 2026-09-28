@@ -10,7 +10,7 @@ const LESSONS = {
     "chapters": [
       {
         "title": "準備: ウィンドウに Renderer の枠を付ける",
-        "goal": "DirectX のコードを書く場所を用意する。この章の終わりでは、まだ何も描かれない。",
+        "goal": "DirectX のコードを貼る場所を用意する。この章の終わりでは、まだ何も描かれない。",
         "steps": [
           {
             "type": "code",
@@ -92,7 +92,7 @@ const LESSONS = {
               "Esc キーで閉じられる"
             ],
             "trouble": [
-              "ビルドエラー C2065 / C3861（識別子が見つからない） → 前の手順を飛ばしていないか。書く場所を間違えていないか。見本と1文字ずつ見比べる",
+              "ビルドエラー C2065 / C3861（識別子が見つからない） → 前の手順を飛ばしていないか。貼る場所を間違えていないか。1文の貼り忘れ・二重貼りがないか",
               "{ } の数が合わないエラーが大量に出る → TODO の行だけでなく、前後の行まで消していないか"
             ]
           }
@@ -180,7 +180,7 @@ const LESSONS = {
             "title": "Icon.png を読み込む関数（WIC）",
             "why": [
               "WIC（Windows Imaging Component）は Windows に入っている画像読み込みの機能です。PNG ファイルを開き、1画素 4byte（B, G, R, A）の配列に変換します。",
-              "ここは DirectX ではないので、中身を細かく理解しなくても構いません。書き写しながら「PNG ファイル → 画素の配列」という入口と出口だけ確認します（流れは Factory → Decoder → Frame → 形式の変換 → CopyPixels）。"
+              "ここは DirectX ではないので、中身を細かく理解しなくても構いません。貼りながら「PNG ファイル → 画素の配列」という入口と出口だけ確認します（流れは Factory → Decoder → Frame → 形式の変換 → CopyPixels）。"
             ],
             "routine": true
           },
@@ -195,7 +195,7 @@ const LESSONS = {
             "title": "物体の形（頂点と Index）を作る関数",
             "why": [
               "GPU は三角形しか描けないので、四角形は三角形2枚に分けます。4つの頂点に番号（Index）を付け、[0, 1, 2] と [0, 2, 3] のように番号で指すと、頂点を重複させずに三角形2枚を表せます。",
-              "BuildSceneGeometry は、Sprite・床・立方体・四角すい・パネル・画面用の四角形を、1つの頂点配列と1つの Index 配列へ順に追加し、それぞれの範囲を DrawRange に記録します。"
+              "BuildSceneGeometry は、Sprite・床・立方体・四角すい・パネルを、1つの頂点配列と1つの Index 配列へ順に追加し、それぞれの範囲を DrawRange に記録します。"
             ],
             "look": [
               "UV は画像上の位置（左上が 0, 0、右下が 1, 1）。床は UV を 0〜4 にして、画像を 4×4 回繰り返す",
@@ -336,54 +336,23 @@ const LESSONS = {
         ]
       },
       {
-        "title": "2段階で描いて完成させる",
-        "goal": "床・立方体・四角すい・半透明パネルを、いったん SceneTexture に描いてから画面へ貼る。",
+        "title": "物体を並べて完成させる",
+        "goal": "床・立方体・四角すい・半透明パネルを並べて描く。",
         "steps": [
           {
             "type": "code",
             "kind": "member",
-            "target": "CreateSceneTexture",
-            "title": "中間の画像（SceneTexture）を作る",
+            "target": "RenderFullScene",
+            "title": "床・立方体・四角すい・パネルを並べて描く",
             "why": [
-              "完成版は2段階で描きます。1段階目は画面ではなく SceneTexture という中間の画像に場面を描き、2段階目でその画像を画面全体に貼ります。ゲームでは、この中間の画像にぼかしや色の調整をかけてから画面に出します（ポストエフェクト）。",
-              "SceneTexture は「描画先」にも「貼る画像」にもなる Texture で、D3DUSAGE_RENDERTARGET を付けて作ります。描画先を指定する SetRenderTarget は Texture ではなく Surface（1枚の画像面）を受け取るので、GetSurfaceLevel で取り出しておきます。"
-            ]
-          },
-          {
-            "type": "code",
-            "kind": "member",
-            "target": "RenderScenePass",
-            "title": "1段階目: SceneTexture に場面を描く",
-            "why": [
-              "SetRenderTarget で描画先を SceneTexture に切り替え、床・立方体・四角すいを描きます。同じ立方体の形でも、World 行列（XMMatrixTranslation）を変えれば別の場所に置けます。",
-              "半透明のパネルは最後に描きます。ALPHABLENDENABLE を TRUE にすると、「新しい色 × alpha ＋ 今の色 × (1 − alpha)」で色が混ざります。パネルは Depth を書き込まない（ZWRITEENABLE = FALSE）ので、奥の物体を隠しません。"
+              "RenderOneObject と同じ準備（Clear → BeginScene → Texture・奥行き・カメラ）をしてから、物体を4つ描きます。同じ立方体の形でも、World 行列（XMMatrixTranslation）を変えれば別の場所に置けます。",
+              "半透明のパネルは最後に描きます。ALPHABLENDENABLE を TRUE にすると、「新しい色 × alpha ＋ 今の色 × (1 − alpha)」で色が混ざります。パネルは Depth を書き込まない（ZWRITEENABLE = FALSE）ので、後ろの物体を隠しません。"
             ],
             "look": [
-              "最後に設定を元に戻している。DX9 の設定は Device に残り続け、次の Draw にも効いてしまうため"
+              "最後に設定を元に戻している。DX9 の設定は Device に残り続け、次の Draw にも効いてしまうため",
+              "不透明な物体を先、半透明のパネルを最後に描く（混ぜる相手の色が先に必要）"
             ],
             "diff": "DX11 では State オブジェクトを丸ごと差し替え、DX12 では PSO を切り替えます。"
-          },
-          {
-            "type": "code",
-            "kind": "member",
-            "target": "RenderPresentPass",
-            "title": "2段階目: SceneTexture を画面に貼る",
-            "why": [
-              "描画先を BackBuffer に戻し、今度は SceneTexture を SetTexture で「貼る画像」として使います。",
-              "行列はすべて単位行列（何も変換しない行列）にして、-1〜1 の四角形 presentQuad がそのまま画面全体を覆うようにします。"
-            ],
-            "look": [
-              "DX9 だけの注意: 画素の中心と Texture の画素の中心が 0.5 画素ずれているため、四角形を 0.5 画素ずらしている（ずらさないと少しぼやける）"
-            ]
-          },
-          {
-            "type": "code",
-            "kind": "member",
-            "target": "RenderFullScene",
-            "title": "完成版の1フレーム",
-            "why": [
-              "1段階目 → 2段階目 → 表示、の順に呼ぶだけです。Render(stage) は最初から、F6（完成画面）のときにこの関数を呼ぶようになっています。"
-            ]
           },
           {
             "type": "run",
@@ -406,9 +375,9 @@ const LESSONS = {
               "PreviewProj の同じ世代を起動した画面と一致する"
             ],
             "trouble": [
-              "真っ黒 → RenderScenePass で SceneTexture に描いたか、RenderPresentPass で BackBuffer に戻して SetTexture(m_sceneTexture) したか",
               "パネルが透けない → パネルの頂点色の alpha と、D3DRS_SRCBLEND / D3DRS_DESTBLEND",
-              "床や立方体まで透ける → パネルを描いたあと ALPHABLENDENABLE を FALSE に戻しているか"
+              "床や立方体まで透ける → パネルを描いたあと ALPHABLENDENABLE を FALSE に戻しているか",
+              "立方体と四角すいの位置が逆・重なる → DrawObject に渡す XMMatrixTranslation の x"
             ],
             "images": [
               "dx9-final.png",
@@ -429,7 +398,7 @@ const LESSONS = {
     "chapters": [
       {
         "title": "準備: ウィンドウに Renderer の枠を付ける",
-        "goal": "DirectX のコードを書く場所を用意する。この章の終わりでは、まだ何も描かれない。",
+        "goal": "DirectX のコードを貼る場所を用意する。この章の終わりでは、まだ何も描かれない。",
         "steps": [
           {
             "type": "code",
@@ -509,7 +478,7 @@ const LESSONS = {
               "Esc キーで閉じられる"
             ],
             "trouble": [
-              "ビルドエラー C2065 / C3861（識別子が見つからない） → 前の手順を飛ばしていないか。書く場所を間違えていないか。見本と1文字ずつ見比べる",
+              "ビルドエラー C2065 / C3861（識別子が見つからない） → 前の手順を飛ばしていないか。貼る場所を間違えていないか。1文の貼り忘れ・二重貼りがないか",
               "{ } の数が合わないエラーが大量に出る → TODO の行だけでなく、前後の行まで消していないか"
             ]
           }
@@ -637,7 +606,7 @@ const LESSONS = {
             "title": "Icon.png を読み込む関数（WIC）",
             "why": [
               "WIC（Windows Imaging Component）は Windows に入っている画像読み込みの機能です。PNG ファイルを開き、1画素 4byte（B, G, R, A）の配列に変換します。",
-              "ここは DirectX ではないので、中身を細かく理解しなくても構いません。書き写しながら「PNG ファイル → 画素の配列」という入口と出口だけ確認します（流れは Factory → Decoder → Frame → 形式の変換 → CopyPixels）。"
+              "ここは DirectX ではないので、中身を細かく理解しなくても構いません。貼りながら「PNG ファイル → 画素の配列」という入口と出口だけ確認します（流れは Factory → Decoder → Frame → 形式の変換 → CopyPixels）。"
             ],
             "routine": true
           },
@@ -652,7 +621,7 @@ const LESSONS = {
             "title": "物体の形（頂点と Index）を作る関数",
             "why": [
               "GPU は三角形しか描けないので、四角形は三角形2枚に分けます。4つの頂点に番号（Index）を付け、[0, 1, 2] と [0, 2, 3] のように番号で指すと、頂点を重複させずに三角形2枚を表せます。",
-              "BuildSceneGeometry は、Sprite・床・立方体・四角すい・パネル・画面用の四角形を、1つの頂点配列と1つの Index 配列へ順に追加し、それぞれの範囲を DrawRange に記録します。"
+              "BuildSceneGeometry は、Sprite・床・立方体・四角すい・パネルを、1つの頂点配列と1つの Index 配列へ順に追加し、それぞれの範囲を DrawRange に記録します。"
             ],
             "look": [
               "UV は画像上の位置（左上が 0, 0、右下が 1, 1）。床は UV を 0〜4 にして、画像を 4×4 回繰り返す",
@@ -730,7 +699,7 @@ const LESSONS = {
             "title": "描き方の State オブジェクトを作る",
             "why": [
               "描き方の設定を、State オブジェクトとして先に作っておきます。Sampler（画像の読み方）、Rasterizer（三角形の塗り方）、DepthStencil（奥行き判定）、Blend（色の混ぜ方）です。",
-              "Depth は3種類、Blend は2種類を作っておき、描く物体に合わせて差し替えます。"
+              "Depth と Blend はそれぞれ2種類（不透明用・半透明用）を作っておき、描く物体に合わせて差し替えます。"
             ],
             "diff": "DX9 では SetRenderState で1項目ずつ Device に設定していました。DX11 では関係する設定を1つのオブジェクトにまとめ、丸ごと差し替えます。"
           },
@@ -808,47 +777,22 @@ const LESSONS = {
         ]
       },
       {
-        "title": "2段階で描いて完成させる",
-        "goal": "床・立方体・四角すい・半透明パネルを、いったん SceneTexture に描いてから画面へ貼る。",
+        "title": "物体を並べて完成させる",
+        "goal": "床・立方体・四角すい・半透明パネルを並べて描く。",
         "steps": [
           {
             "type": "code",
             "kind": "member",
-            "target": "CreateSceneTexture",
-            "title": "中間の画像（SceneTexture）と RTV・SRV を作る",
+            "target": "RenderFullScene",
+            "title": "床・立方体・四角すい・パネルを並べて描く",
             "why": [
-              "完成版は2段階で描きます。1段階目は SceneTexture という中間の画像に場面を描き、2段階目でその画像を画面全体に貼ります。",
-              "SceneTexture は、BindFlags に RENDER_TARGET と SHADER_RESOURCE を両方付けて作り、同じ Texture から RTV と SRV の2つの View を作ります。これが DX11 の「Resource と View の分離」です。中身（Texture）は1つのまま、使い方ごとに札（View）を使い分けます。"
-            ]
-          },
-          {
-            "type": "code",
-            "kind": "member",
-            "target": "RenderScenePass",
-            "title": "1段階目: SceneTexture に場面を描く",
-            "why": [
-              "描画先を SceneTexture の RTV にして場面を描きます。最初に PSSetShaderResources へ nullptr を設定しているのは、前のフレームで SceneTexture を SRV として接続したままだからです。同じ Texture を読みながら描くことはできないので、先に外します。",
+              "RenderOneObject と同じ準備（描画先の Clear → BindCommonPipeline → SRV・State の設定）をしてから、物体を4つ描きます。同じ立方体の形でも、World 行列（XMMatrixTranslation）を変えれば別の場所に置けます。",
               "半透明パネルは、BlendState を「alpha で混ぜる」に、DepthStencilState を「判定だけ・書き込まない」に差し替えて最後に描きます。"
             ],
-            "diff": "DX9 では RenderState を1つずつ変えて、あとで戻していました。DX11 では State オブジェクトを丸ごと差し替えるので、戻すときも別のオブジェクトを設定するだけです。"
-          },
-          {
-            "type": "code",
-            "kind": "member",
-            "target": "RenderPresentPass",
-            "title": "2段階目: SceneTexture を画面に貼る",
-            "why": [
-              "描画先を BackBuffer の RTV に戻し、SceneTexture の SRV を t0 に設定して、画面全体を覆う四角形を描きます。Depth は使いません。"
-            ]
-          },
-          {
-            "type": "code",
-            "kind": "member",
-            "target": "RenderFullScene",
-            "title": "完成版の1フレーム",
-            "why": [
-              "1段階目 → 2段階目 → 表示、の順に呼ぶだけです。Render(stage) は最初から、F6（完成画面）のときにこの関数を呼ぶようになっています。"
-            ]
+            "look": [
+              "不透明な物体を先、半透明のパネルを最後に描く（混ぜる相手の色が先に必要）"
+            ],
+            "diff": "DX9 では RenderState を1つずつ変えて、あとで戻していました。DX11 では State オブジェクトを丸ごと差し替えるので、次に使うときは別のオブジェクトを設定するだけです。"
           },
           {
             "type": "run",
@@ -871,9 +815,9 @@ const LESSONS = {
               "PreviewProj の同じ世代を起動した画面と一致する"
             ],
             "trouble": [
-              "真っ黒 → RenderScenePass で SceneTexture の RTV に描いたか、RenderPresentPass で SceneTexture の SRV を設定したか",
-              "「出力」に RTV / SRV を同時に使っている警告が出る → RenderScenePass の最初で SRV を外しているか",
-              "パネルが透けない → m_alphaBlendState の設定と、パネルの頂点色の alpha"
+              "パネルが透けない → m_alphaBlendState の設定と、パネルの頂点色の alpha",
+              "パネルの後ろの物体が消える → パネルの前に m_depthReadOnlyState へ差し替えているか",
+              "「出力」に D3D11 ERROR が出ている → 最初の1件から直す"
             ],
             "images": [
               "dx11-final.png",
@@ -894,7 +838,7 @@ const LESSONS = {
     "chapters": [
       {
         "title": "準備: ウィンドウに Renderer の枠を付ける",
-        "goal": "DirectX のコードを書く場所を用意する。この章の終わりでは、まだ何も描かれない。",
+        "goal": "DirectX のコードを貼る場所を用意する。この章の終わりでは、まだ何も描かれない。",
         "steps": [
           {
             "type": "code",
@@ -916,7 +860,7 @@ const LESSONS = {
               "DX11 と同じ型に加えて、定数がいくつか増えています。DX12 では「BackBuffer を何枚使うか」「Descriptor を棚の何番に置くか」なども、自分で決めて管理するためです。"
             ],
             "look": [
-              "kSceneRtvIndex / kIconSrvIndex / kSceneSrvIndex: Descriptor を置く棚（DescriptorHeap）の中の番号",
+              "kIconSrvIndex / kSrvCount: Descriptor を置く棚（DescriptorHeap）の中の番号と個数",
               "kConstantBufferStride: ConstantBuffer は 256byte 単位で置く決まりがあるため、1物体分（64byte）を 256byte に切り上げている"
             ]
           },
@@ -974,7 +918,7 @@ const LESSONS = {
               "Esc キーで閉じられる"
             ],
             "trouble": [
-              "ビルドエラー C2065 / C3861（識別子が見つからない） → 前の手順を飛ばしていないか。書く場所を間違えていないか。見本と1文字ずつ見比べる",
+              "ビルドエラー C2065 / C3861（識別子が見つからない） → 前の手順を飛ばしていないか。貼る場所を間違えていないか。1文の貼り忘れ・二重貼りがないか",
               "{ } の数が合わないエラーが大量に出る → TODO の行だけでなく、前後の行まで消していないか"
             ]
           }
@@ -1204,10 +1148,10 @@ const LESSONS = {
             "type": "code",
             "kind": "member",
             "target": "CreatePipelineStates",
-            "title": "PSO（描き方の設定一式）を3つ作る",
+            "title": "PSO（描き方の設定一式）を2つ作る",
             "why": [
               "PSO（Pipeline State Object）は、Shader・InputLayout・Rasterizer・Blend・Depth・描画先の形式などを1つにまとめたオブジェクトです。GPU は描く前に PSO を丸ごと受け取ります。",
-              "Blend や Depth だけを後から差し替えることはできないので、不透明用・半透明用・画面へ貼る用の3つの PSO を作っておき、描くものに合わせて切り替えます。"
+              "Blend や Depth だけを後から差し替えることはできないので、不透明用・半透明用の2つの PSO を作っておき、描くものに合わせて切り替えます。"
             ],
             "diff": "DX11 の InputLayout と各 State オブジェクトが、PSO 1つにまとまりました。"
           }
@@ -1240,7 +1184,7 @@ const LESSONS = {
             "title": "Icon.png を読み込む関数（WIC）",
             "why": [
               "WIC（Windows Imaging Component）は Windows に入っている画像読み込みの機能です。PNG ファイルを開き、1画素 4byte（B, G, R, A）の配列に変換します。",
-              "ここは DirectX ではないので、中身を細かく理解しなくても構いません。書き写しながら「PNG ファイル → 画素の配列」という入口と出口だけ確認します（流れは Factory → Decoder → Frame → 形式の変換 → CopyPixels）。"
+              "ここは DirectX ではないので、中身を細かく理解しなくても構いません。貼りながら「PNG ファイル → 画素の配列」という入口と出口だけ確認します（流れは Factory → Decoder → Frame → 形式の変換 → CopyPixels）。"
             ],
             "routine": true
           },
@@ -1255,7 +1199,7 @@ const LESSONS = {
             "title": "物体の形（頂点と Index）を作る関数",
             "why": [
               "GPU は三角形しか描けないので、四角形は三角形2枚に分けます。4つの頂点に番号（Index）を付け、[0, 1, 2] と [0, 2, 3] のように番号で指すと、頂点を重複させずに三角形2枚を表せます。",
-              "BuildSceneGeometry は、Sprite・床・立方体・四角すい・パネル・画面用の四角形を、1つの頂点配列と1つの Index 配列へ順に追加し、それぞれの範囲を DrawRange に記録します。"
+              "BuildSceneGeometry は、Sprite・床・立方体・四角すい・パネルを、1つの頂点配列と1つの Index 配列へ順に追加し、それぞれの範囲を DrawRange に記録します。"
             ],
             "look": [
               "UV は画像上の位置（左上が 0, 0、右下が 1, 1）。床は UV を 0〜4 にして、画像を 4×4 回繰り返す",
@@ -1310,7 +1254,7 @@ const LESSONS = {
             "title": "行列を渡す ConstantBuffer を作る",
             "why": [
               "行列は毎フレーム CPU から書き換えるので、ConstantBuffer は UPLOAD メモリに作り、Map したままにして直接書き込みます。",
-              "物体ごとに 256byte ずつ場所を分けて、5個分を確保します（なぜ分けるのかは DrawObject で説明します）。"
+              "物体ごとに 256byte ずつ場所を分けて、4個分を確保します（なぜ分けるのかは DrawObject で説明します）。"
             ]
           },
           {
@@ -1419,45 +1363,21 @@ const LESSONS = {
         ]
       },
       {
-        "title": "2段階で描いて完成させる",
-        "goal": "床・立方体・四角すい・半透明パネルを、いったん SceneTexture に描いてから画面へ貼る。",
+        "title": "物体を並べて完成させる",
+        "goal": "床・立方体・四角すい・半透明パネルを並べて描く。",
         "steps": [
           {
             "type": "code",
             "kind": "member",
-            "target": "CreateSceneTexture",
-            "title": "中間の画像（SceneTexture）と RTV・SRV を作る",
-            "why": [
-              "描画先にも読む画像にもなる SceneTexture を作り、RTV 用の棚の kSceneRtvIndex 番に RTV を、SRV 用の棚の kSceneSrvIndex 番に SRV を書き込みます。",
-              "最初の State は PIXEL_SHADER_RESOURCE（Shader から読む）にしておき、描く直前に Barrier で RENDER_TARGET に切り替えます。"
-            ]
-          },
-          {
-            "type": "code",
-            "kind": "member",
-            "target": "RenderScenePass",
-            "title": "1段階目: SceneTexture に場面を描く",
-            "why": [
-              "SceneTexture を PIXEL_SHADER_RESOURCE → RENDER_TARGET に切り替えてから描き、描き終わったら元に戻します。この2回の Barrier が、DX11 の「SRV の接続を外す」処理の代わりです。",
-              "物体ごとに別の objectIndex を使います。半透明パネルは、PSO を半透明用に切り替えて最後に描きます。"
-            ]
-          },
-          {
-            "type": "code",
-            "kind": "member",
-            "target": "RenderPresentPass",
-            "title": "2段階目: SceneTexture を画面に貼る",
-            "why": [
-              "今の BackBuffer を描画先にし、画面へ貼る用の PSO と SceneTexture の SRV を指定して、画面全体を覆う四角形を描きます。"
-            ]
-          },
-          {
-            "type": "code",
-            "kind": "member",
             "target": "RenderFullScene",
-            "title": "完成版の1フレーム",
+            "title": "床・立方体・四角すい・パネルを並べて描く",
             "why": [
-              "BeginFrame → 1段階目 → 2段階目 → EndFrame。この1フレームの間に、SceneTexture と BackBuffer がそれぞれ別の Barrier で State を切り替えています。"
+              "RenderOneObject と同じ準備（BeginFrame → 描画先の Clear → BindCommonPipeline → PSO と SRV の指定）をしてから、物体を4つ描きます。",
+              "物体ごとに別の objectIndex（ConstantBuffer の場所）を使います。半透明パネルは、PSO を半透明用に切り替えて最後に描きます。"
+            ],
+            "look": [
+              "objectIndex は 0〜3 で、kObjectCount（4）個ぶんの場所を使い切っている",
+              "不透明な物体を先、半透明のパネルを最後に描く（混ぜる相手の色が先に必要）"
             ]
           },
           {
@@ -1481,9 +1401,9 @@ const LESSONS = {
               "PreviewProj の同じ世代を起動した画面と一致する"
             ],
             "trouble": [
-              "真っ黒 → SceneTexture の RTV に描いたか、SceneTexture の SRV（kSceneSrvIndex）を指定したか",
-              "「出力」に D3D12 ERROR（Resource State）が出る → RenderScenePass の2つの Barrier の before / after",
-              "パネルが透けない → m_alphaBlendPSO に切り替えてからパネルを描いているか"
+              "立方体と四角すいが中央で重なる → DrawObject の objectIndex が同じになっていないか",
+              "パネルが透けない → m_alphaBlendPSO に切り替えてからパネルを描いているか",
+              "「出力」に D3D12 ERROR が出ている → 最初の1件を読む（CBV の場所・Root Parameter の番号が多い）"
             ],
             "images": [
               "dx12-final.png",

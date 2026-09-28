@@ -445,3 +445,29 @@ thead th.current { color: var(--accent); }
 .fields dd { margin: 2px 0 0; }
 .dict-item.flash { animation: flash 1.6s ease-out; }
 @keyframes flash { from { background: var(--accent-soft); } to { background: transparent; } }
+
+/* ---------- 1文ずつコピー ---------- */
+
+.unit-copy {
+  margin-left: 10px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #5c6679;
+  font: 11px/1.6 "Segoe UI", "Yu Gothic UI", sans-serif;
+  vertical-align: 1px;
+  user-select: none;
+  opacity: 0.35;
+}
+.unit:hover .unit-copy, .unit-copy:focus-visible { opacity: 1; border-color: #3d4658; background: #252c3a; color: #cfd6e3; }
+.unit-copy:hover { background: #313a4c; }
+.unit-copy.copied { opacity: 1; border-color: var(--run); color: var(--run); }
+.mini-button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 1px 8px;
+  font-size: 12px;
+}
+.mini-button.copied { border-color: var(--run); color: var(--run); }

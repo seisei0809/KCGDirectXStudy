@@ -82,6 +82,7 @@ function codeForStep(step) {
       const parts = step.target.map(name => code.functions[name]);
       return {
         code: parts.map(part => part.code).join("\n\n"),
+        units: parts.flatMap((part, i) => part.units.map((unit, j) => (i > 0 && j === 0 ? { ...unit, blank: unit.blank + 1 } : unit))),
         start: Math.min(...parts.map(part => part.start)),
         end: Math.max(...parts.map(part => part.end)),
       };
@@ -97,21 +98,21 @@ function whereToWrite(step) {
     : `PracticeProj/${FOLDER[generation]}/main.cpp`;
   const signature = step.kind === "member" ? CODE[generation].functions[step.target].signature : "";
   const places = {
-    headers: { search: "// TODO 1:", how: "この行を消して、その場所に下のコードを書く。" },
-    types: { search: "// TODO 2:", how: "この行を消して、その場所に下のコードを書く。" },
-    renderer: { search: "// TODO 4:", how: "この行を消して、その場所に下のコードを書く。" },
+    headers: { search: "// TODO 1:", how: "この行を消して、その場所に下のコードを1文ずつ貼る。" },
+    types: { search: "// TODO 2:", how: "この行を消して、その場所に下のコードを1文ずつ貼る。" },
+    renderer: { search: "// TODO 4:", how: "この行を消して、その場所に下のコードを1文ずつ貼る。" },
   };
   if (step.kind === "block") return { file, ...places[step.target] };
   if (step.kind === "helpers") {
-    return { file, search: "// TODO 3:", how: "この行のすぐ上に下のコードを書き、TODO 3 との間を1行あける。TODO 3 の行は消さない（次の補助関数もこの上に書き足していく）。" };
+    return { file, search: "// TODO 3:", how: "この行のすぐ上に下のコードを1文ずつ貼り、TODO 3 との間を1行あける。TODO 3 の行は消さない（次の補助関数もこの上に足していく）。" };
   }
   if (step.kind === "main") {
-    return { file, search: "// TODO 5:", how: "この行からファイルの最後までを消して（Ctrl + Shift + End で選択できる）、その場所に下のコードを書く。" };
+    return { file, search: "// TODO 5:", how: "この行からファイルの最後までを消して（Ctrl + Shift + End で選択できる）、その場所に下のコードを1文ずつ貼る。" };
   }
   if (step.kind === "member") {
-    return { file, search: `// TODO: ${step.target}`, how: `Renderer の ${signature} の中にある、この行を消して、その場所に下のコードを書く。`, signature };
+    return { file, search: `// TODO: ${step.target}`, how: `Renderer の ${signature} の中にある、この行を消して、その場所に下のコードを1文ずつ貼る。`, signature };
   }
-  return { file, search: "", how: "ソリューション エクスプローラーでこのファイルを開き、中身を全部消してから下のコードを書く。" };
+  return { file, search: "", how: "ソリューション エクスプローラーでこのファイルを開き、中身を全部消してから下のコードを1文ずつ貼る。" };
 }
 
 // ---------- コードの色付けとリンク ----------
@@ -209,7 +210,7 @@ function renderTabs() {
 function renderOverview() {
   const lesson = LESSONS[generation];
   const images = ["clear", "sprite", "cube", "final"];
-  const captions = ["確認 1（F3）: 背景色だけ", "確認 2（F4）: Sprite 1枚", "確認 2（F5）: 立方体1個", "完成（F6）: 2段階で描いた場面"];
+  const captions = ["確認 1（F3）: 背景色だけ", "確認 2（F4）: Sprite 1枚", "確認 2（F5）: 立方体1個", "完成（F6）: 物体を並べた場面"];
   document.querySelector("#overview").innerHTML = `
     <p class="eyebrow">${escapeHtml(lesson.label)}</p>
     <h1>${escapeHtml(lesson.theme)}</h1>
@@ -225,11 +226,11 @@ function renderOverview() {
       <h2>進め方</h2>
       <ol>
         <li>ダウンロードしたフォルダーの <b><code>PracticeProj/PracticeProj.sln</code></b> を Visual Studio で開く。構成は <b>Debug / x64</b>、今日の世代をスタートアップ プロジェクトにする。</li>
-        <li>手順を上から順に進める。<b>「書く場所」の文字を Ctrl + F で検索</b>し、見本のコードを<b>自分の手で入力</b>する。コメントも含めて書き写す。</li>
-        <li>1手順ごとに <b>Ctrl + Shift + B</b> でビルドする。エラーが出たら次へ進まず、直前に書いたコードを見本と1行ずつ見比べる。</li>
+        <li>手順を上から順に進める。<b>「貼る場所」の文字を Ctrl + F で検索</b>する。コードは<b>文の末尾の「コピー」で1文ずつ</b>（直前のコメントも一緒に）コピーできる。定型の手順は右上の「全部コピー」でまとめて貼ってよい。</li>
+        <li>1手順ごとに <b>Ctrl + Shift + B</b> でビルドする。エラーが出たら次へ進まず、直前に貼った文を見直す（貼り忘れ・二重貼りが多い）。</li>
         <li><span class="run-chip">起動</span> の手順だけ <b>Ctrl + F5</b> で起動し、見本の画像と見比べる。</li>
       </ol>
-      <p class="note">この講義のコードはコピー＆ペーストせず、すべて自分で入力します。「定型」の手順は、説明を読んで役割が分かれば、中身は書き写すだけで十分です。「ここが本題」の手順は、書きながらコードの中のコメントと下の「ここを見る」を読みます。コード中の青い名前をクリックすると辞書が開きます。</p>
+      <p class="note">講師の説明に合わせて1文ずつ、何をしている文かを読んでから貼ります。「定型」の手順は、説明を読んで役割が分かれば、中身は貼るだけで十分です。「ここが本題」の手順は、コードの中のコメントと下の「ここを見る」も読みます。コード中の青い名前をクリックすると辞書が開きます。</p>
     </div>`;
 }
 
@@ -266,7 +267,7 @@ function renderCodeStep(step, done) {
   const where = whereToWrite(step);
   const lineCount = code.code.split("\n").length;
   const source = step.kind === "shader" ? `PreviewProj/${FOLDER[generation]}/${code.path}` : CODE[generation].source;
-  const codeHtml = `<pre class="code"><code>${highlight(code.code)}</code></pre>`;
+  const codeHtml = `<pre class="code"><code>${renderUnits(step, code.units)}</code></pre>`;
   return `
     <article class="step ${step.routine ? "is-routine" : "is-core"}" id="${step.id}">
       <header class="step-head">
@@ -279,21 +280,68 @@ function renderCodeStep(step, done) {
       ${step.diff ? `<p class="diff"><b>他の世代との違い</b>${inline(step.diff)}</p>` : ""}
       <div class="where">
         <div class="where-file">${escapeHtml(where.file)}</div>
-        ${where.search ? `<div class="where-search"><span>書く場所</span><code>${escapeHtml(where.search)}</code></div>` : ""}
+        ${where.search ? `<div class="where-search"><span>貼る場所</span><code>${escapeHtml(where.search)}</code></div>` : ""}
         <p>${escapeHtml(where.how)}</p>
       </div>
       <div class="code-box">
         <div class="code-toolbar">
           <span>${escapeHtml(step.kind === "member" ? `${step.target} の中身` : step.kind === "helpers" ? step.target.join(" / ") : step.kind === "shader" ? code.path : step.kind === "main" ? "wWinMain" : { headers: "include などの宣言", types: "データの型", renderer: "Renderer クラス（中身は TODO）" }[step.target])}（${lineCount} 行）</span>
+          <button type="button" class="mini-button" data-copy-all="${step.id}">全部コピー</button>
         </div>
         ${codeHtml}
       </div>
       ${step.look ? `<div class="look"><b>ここを見る</b><ul>${step.look.map(text => `<li>${inline(text)}</li>`).join("")}</ul></div>` : ""}
       <footer class="step-foot">
-        <span>書いたら <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> でビルド。エラー 0 件なら次へ。</span>
+        <span>貼り終えたら <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> でビルド。エラー 0 件なら次へ。</span>
         <span class="source">見本: ${escapeHtml(source)} ${code.start}–${code.end} 行</span>
       </footer>
     </article>`;
+}
+
+// ---------- 1文ずつコピー ----------
+
+function renderUnits(step, units) {
+  let html = "";
+  units.forEach((unit, i) => {
+    html += "\n".repeat(unit.blank);
+    if (unit.comment) html += `<span class="c">${escapeHtml(unit.comment)}</span>\n`;
+    if (!unit.code) return;
+    html += `<span class="unit">${highlight(unit.code)}`
+      + `<button type="button" class="unit-copy" data-copy-unit="${i}" data-step-id="${step.id}" title="この文を（直前のコメントも含めて）コピー">コピー</button></span>\n`;
+  });
+  return html.replace(/\n$/, "");
+}
+
+function unitsForStep(stepId) {
+  return codeForStep(steps.find(item => item.id === stepId)).units;
+}
+
+async function copyText(text, button, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = text;
+    document.body.append(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+  }
+  button.textContent = "✓ コピー済み";
+  button.classList.add("copied");
+  setTimeout(() => {
+    button.textContent = label;
+    button.classList.remove("copied");
+  }, 1200);
+}
+
+function copyUnit(stepId, index, button) {
+  const unit = unitsForStep(stepId)[index];
+  copyText((unit.comment ? `${unit.comment}\n` : "") + unit.code + "\n", button, "コピー");
+}
+
+function copyAll(stepId, button) {
+  copyText(codeForStep(steps.find(item => item.id === stepId)).code + "\n", button, "全部コピー");
 }
 
 function renderRunStep(step, done) {
@@ -336,8 +384,9 @@ function renderCompare() {
     ["行列の渡し方", "SetTransform", "ConstantBuffer（UpdateSubresource）", "ConstantBuffer（物体ごとに 256byte の場所）"],
     ["Texture の渡し方", "SetTexture", "SRV を PSSetShaderResources", "SRV を DescriptorHeap に置き、RootSignature 経由で指定"],
     ["描き方の設定", "SetRenderState で1項目ずつ", "State オブジェクトを差し替え", "PSO（Shader も含めて1つ）を切り替え"],
-    ["描画先の切り替え", "SetRenderTarget（Surface）", "OMSetRenderTargets（RTV）", "OMSetRenderTargets（RTV の場所）＋ Barrier"],
-    ["同じ Texture を描いて読む", "Surface と Texture", "RTV と SRV の2つの View", "RTV / SRV ＋ Barrier で State を切り替え"],
+    ["描画先の指定", "Device が作った BackBuffer に自動で描く", "BackBuffer の RTV を OMSetRenderTargets", "RTV を棚に置き、場所を OMSetRenderTargets"],
+    ["Depth バッファ", "Device を作るときに自動で作られる", "Texture と DSV を自分で作る", "Resource と DSV（棚）を自分で作る"],
+    ["Resource の使い方の切り替え", "Direct3D が管理", "Direct3D が管理", "Barrier で自分で宣言（PRESENT ⇄ RENDER_TARGET など）"],
     ["GPU の完了待ち", "Direct3D が管理", "Direct3D が管理", "Fence で自分で待つ"],
   ];
   document.querySelector("#compare").innerHTML = `
@@ -603,6 +652,14 @@ window.addEventListener("scroll", () => {
 document.addEventListener("click", event => {
   const target = event.target.closest("button, a");
   if (!target) return;
+  if (target.dataset.copyUnit) {
+    copyUnit(target.dataset.stepId, Number(target.dataset.copyUnit), target);
+    return;
+  }
+  if (target.dataset.copyAll) {
+    copyAll(target.dataset.copyAll, target);
+    return;
+  }
   const href = target.getAttribute("href");
   if (target.tagName === "A" && href?.startsWith("#") && target.dataset.action !== "top") {
     event.preventDefault();
