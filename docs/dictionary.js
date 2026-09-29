@@ -1803,7 +1803,7 @@ const DICTIONARY = {
    "deep": "DX12ではRasterizerState単独COM ObjectをbindせずPSOの一部として固定します。BlendだけでなくRasterizer差分もPSO variationになります。"
   },
   {
-   "name": "D3D12_BLEND_DESC / D3D12_RENDER_TARGET_BLEND_DESC",
+   "name": "D3D12_BLEND_DESC",
    "group": "dx12",
    "summary": "PSOに含めるColor Blend規則です。RTV slotごとにSrc/Dest係数と演算を指定します。",
    "fields": [
@@ -2030,6 +2030,616 @@ const DICTIONARY = {
    ],
    "used": "ID3D12Resource::Map / Unmap。",
    "deep": "UploadHeapへ書くだけならMapのreadRange={0,0}が適切です。これはResource stateやGPU access rangeとは別概念です。"
+  },
+  {
+   "name": "ComPtr",
+   "group": "common",
+   "summary": "DirectX（COM）のオブジェクトを持つスマートポインタ。持ち主がいなくなると自動で Release する。",
+   "fields": [
+    [
+     "Get()",
+     "生のポインタ",
+     "関数に渡すときに使う。持ち主は ComPtr のまま。"
+    ],
+    [
+     "GetAddressOf()",
+     "受け取り先",
+     "Create〇〇 の最後の引数に渡し、作られたオブジェクトを受け取る。"
+    ],
+    [
+     "As(&other)",
+     "別の型として",
+     "同じオブジェクトを別のインターフェースとして使う（IDXGISwapChain1 → IDXGISwapChain3）。"
+    ]
+   ],
+   "used": "Renderer のメンバーほぼすべて。",
+   "deep": "Release を書き忘れるとメモリや GPU の Resource が残り続ける。ComPtr を使えば解放を書かなくてよい。"
+  },
+  {
+   "name": "HRESULT",
+   "group": "common",
+   "summary": "DirectX・COM の関数が返す結果の値。0 以上なら成功、負なら失敗。",
+   "fields": [
+    [
+     "S_OK",
+     "0",
+     "成功。"
+    ],
+    [
+     "E_INVALIDARG",
+     "負の値",
+     "引数が間違っている。"
+    ],
+    [
+     "E_OUTOFMEMORY",
+     "負の値",
+     "メモリが足りない。"
+    ]
+   ],
+   "used": "ThrowIfFailed に渡し、失敗なら例外にして止める。",
+   "deep": "FAILED(hr) / SUCCEEDED(hr) で成功・失敗を判定する。DX12 では失敗の理由が Debug Layer の出力に出ることが多い。"
+  },
+  {
+   "name": "XMMATRIX / FXMMATRIX / CXMMATRIX",
+   "group": "math",
+   "summary": "DirectXMath の 4×4 行列。CPU の SIMD 命令で速く計算するための型。",
+   "fields": [
+    [
+     "XMMATRIX",
+     "計算用",
+     "掛け算や XMMatrixLookAtLH などの結果。変数として並びが保証されないので、保存や GPU へ渡すときは XMFLOAT4X4 に書き出す。"
+    ],
+    [
+     "FXMMATRIX",
+     "1つ目の引数用",
+     "関数の引数で行列を速く渡すための別名（最初の1つ）。"
+    ],
+    [
+     "CXMMATRIX",
+     "2つ目以降の引数用",
+     "2つ目以降の行列の引数に使う別名。"
+    ]
+   ],
+   "used": "BuildViewProjection / DrawObject の world・view・projection。",
+   "deep": "引数に XMMATRIX と直接書かず FXMMATRIX / CXMMATRIX と書くのは、呼び出し規約ごとに一番速い渡し方をさせるための DirectXMath の決まり。"
+  },
+  {
+   "name": "XMFLOAT2 / XMFLOAT3 / XMFLOAT4 / XMFLOAT4X4",
+   "group": "math",
+   "summary": "float を並べただけの保存用の型。メモリ上の並びが決まっているので、頂点や ConstantBuffer にそのまま使える。",
+   "fields": [
+    [
+     "XMFLOAT2",
+     "float×2（8byte）",
+     "UV。"
+    ],
+    [
+     "XMFLOAT3",
+     "float×3（12byte）",
+     "位置。"
+    ],
+    [
+     "XMFLOAT4",
+     "float×4（16byte）",
+     "色（DX11/12）。"
+    ],
+    [
+     "XMFLOAT4X4",
+     "float×16（64byte）",
+     "ConstantBuffer に入れる行列。XMStoreFloat4x4 で XMMATRIX から書き出す。"
+    ]
+   ],
+   "used": "Vertex / SceneConstants のメンバー、AppendQuad の引数。",
+   "deep": "計算は XMVECTOR / XMMATRIX、保存は XMFLOAT〇 と使い分けるのが DirectXMath の考え方。"
+  },
+  {
+   "name": "D3DCOLOR",
+   "group": "dx9",
+   "summary": "DX9 の色。32bit の整数1つに A, R, G, B を 8bit ずつ詰めたもの。",
+   "fields": [
+    [
+     "D3DCOLOR_ARGB(a, r, g, b)",
+     "0〜255 ×4",
+     "alpha つきで作る。パネルの alpha 90 など。"
+    ],
+    [
+     "D3DCOLOR_XRGB(r, g, b)",
+     "0〜255 ×3",
+     "alpha = 255（不透明）で作る。"
+    ]
+   ],
+   "used": "Vertex の color、Clear の色。",
+   "deep": "DX11/12 では色は float 4つ（XMFLOAT4、0.0〜1.0）になる。固定機能の頂点色が整数1つで決まっていたのが DX9 の特徴。"
+  },
+  {
+   "name": "ID3D11Device",
+   "group": "dx11",
+   "summary": "Resource・View・State・Shader を「作る係」。作るだけで、描画の命令は出さない。",
+   "fields": [
+    [
+     "CreateBuffer / CreateTexture2D",
+     "Resource",
+     "Buffer と Texture を作る。"
+    ],
+    [
+     "Create〇〇View",
+     "View",
+     "RTV / SRV / DSV を作る。"
+    ],
+    [
+     "Create〇〇State",
+     "State",
+     "Sampler / Rasterizer / DepthStencil / Blend の State オブジェクトを作る。"
+    ],
+    [
+     "CreateVertexShader / CreatePixelShader / CreateInputLayout",
+     "Shader",
+     "Shader と頂点の読み方を作る。"
+    ]
+   ],
+   "used": "m_device。Initialize の中の Create〇〇 すべて。",
+   "deep": "DX9 の Device は作る・設定する・描くを全部持っていた。DX11 で「作る」だけがこの Device に残った。"
+  },
+  {
+   "name": "ID3D11DeviceContext",
+   "group": "dx11",
+   "summary": "設定をつないで描く「命令する係」。IASet〇〇・VSSet〇〇・OMSet〇〇・Draw などはすべてこれ。",
+   "fields": [
+    [
+     "IA / VS / RS / PS / OMSet〇〇",
+     "設定",
+     "GPU の各段階に Buffer・Shader・State をつなぐ。つないだ設定は変えるまで残る。"
+    ],
+    [
+     "Clear〇〇View",
+     "消す",
+     "描画先や Depth を初期化する。"
+    ],
+    [
+     "UpdateSubresource",
+     "書き込み",
+     "CPU の値を DEFAULT の Resource へ書く。"
+    ],
+    [
+     "DrawIndexed",
+     "描く",
+     "今つながっている設定で描く。"
+    ]
+   ],
+   "used": "m_context。Render〇〇 / BindCommonPipeline / DrawObject。",
+   "deep": "Immediate Context は呼んだ命令をすぐ GPU へ流す。DX12 の CommandList は「記録するだけ」なのが大きな違い。"
+  },
+  {
+   "name": "IDXGISwapChain",
+   "group": "dx11",
+   "summary": "BackBuffer の組を持ち、ウィンドウへ表示する「表示する係」。DirectX の中でも DXGI という別の部品。",
+   "fields": [
+    [
+     "GetBuffer",
+     "BackBuffer",
+     "BackBuffer の Texture を取り出す（RTV を作るため）。"
+    ],
+    [
+     "Present",
+     "表示",
+     "描き終えた BackBuffer をウィンドウへ出す。"
+    ]
+   ],
+   "used": "m_swapChain。CreateBackBufferView と Render〇〇 の最後。",
+   "deep": "DX9 では Device が表示も担当していた。"
+  },
+  {
+   "name": "ID3D11RenderTargetView / ID3D11DepthStencilView",
+   "group": "dx11",
+   "summary": "Texture を「描画先」「Depth の書き込み先」として使うための札（View）。",
+   "fields": [
+    [
+     "ID3D11RenderTargetView",
+     "RTV",
+     "色を描き込む先。OMSetRenderTargets の1つ目。"
+    ],
+    [
+     "ID3D11DepthStencilView",
+     "DSV",
+     "Depth を書き込む先。OMSetRenderTargets の2つ目。"
+    ]
+   ],
+   "used": "m_backBufferRTV / m_depthStencilView。",
+   "deep": "GPU に渡すのは Texture ではなく View。同じ Texture に RTV と SRV を両方作れば、描いてから読む、といった使い分けができる。"
+  },
+  {
+   "name": "ID3D11VertexShader / ID3D11PixelShader",
+   "group": "dx11",
+   "summary": "コンパイルした HLSL から作った、GPU で動く Shader。",
+   "fields": [
+    [
+     "ID3D11VertexShader",
+     "VSMain",
+     "頂点ごとに位置を変換する。VSSetShader でつなぐ。"
+    ],
+    [
+     "ID3D11PixelShader",
+     "PSMain",
+     "画素ごとに色を決める。PSSetShader でつなぐ。"
+    ]
+   ],
+   "used": "m_vertexShader / m_pixelShader。",
+   "deep": "DX12 では Shader オブジェクトは作らず、コンパイル結果の byte 列を PSO に入れる。"
+  },
+  {
+   "name": "ID3D11InputLayout",
+   "group": "dx11",
+   "summary": "VertexBuffer の何 byte 目を HLSL のどの Semantic として読むかの表。",
+   "fields": [
+    [
+     "作り方",
+     "CreateInputLayout",
+     "D3D11_INPUT_ELEMENT_DESC の配列と、VS のコンパイル結果から作る。"
+    ],
+    [
+     "つなぎ方",
+     "IASetInputLayout",
+     "描く前につなぐ。"
+    ]
+   ],
+   "used": "m_inputLayout。",
+   "deep": "DX9 の FVF に当たる。DX12 では PSO の中に入れる。"
+  },
+  {
+   "name": "ID3D11Buffer",
+   "group": "dx11",
+   "summary": "1次元のメモリ。VertexBuffer・IndexBuffer・ConstantBuffer はどれもこの型で、BindFlags で役割が決まる。",
+   "fields": [
+    [
+     "VertexBuffer",
+     "BIND_VERTEX_BUFFER",
+     "頂点。IASetVertexBuffers でつなぐ。"
+    ],
+    [
+     "IndexBuffer",
+     "BIND_INDEX_BUFFER",
+     "Index。IASetIndexBuffer でつなぐ。"
+    ],
+    [
+     "ConstantBuffer",
+     "BIND_CONSTANT_BUFFER",
+     "Shader に渡す値。VSSetConstantBuffers でつなぐ。"
+    ]
+   ],
+   "used": "m_vertexBuffer / m_indexBuffer / m_constantBuffer。",
+   "deep": "DX9 では VertexBuffer と IndexBuffer は別の型だった。DX12 では Buffer も Texture も ID3D12Resource 1つになる。"
+  },
+  {
+   "name": "ID3D11SamplerState / ID3D11RasterizerState / ID3D11DepthStencilState / ID3D11BlendState",
+   "group": "dx11",
+   "summary": "描き方の設定をまとめた State オブジェクト。作った後は中身を変えられず、描くときに丸ごと差し替える。",
+   "fields": [
+    [
+     "ID3D11SamplerState",
+     "PSSetSamplers",
+     "画像の読み方（補間・繰り返し）。"
+    ],
+    [
+     "ID3D11RasterizerState",
+     "RSSetState",
+     "三角形の塗り方・裏面を捨てるか。"
+    ],
+    [
+     "ID3D11DepthStencilState",
+     "OMSetDepthStencilState",
+     "Depth の判定と書き込み。"
+    ],
+    [
+     "ID3D11BlendState",
+     "OMSetBlendState",
+     "色の混ぜ方。"
+    ]
+   ],
+   "used": "m_sampler / m_rasterizerState / m_depthWriteState / m_depthReadOnlyState / m_opaqueBlendState / m_alphaBlendState。",
+   "deep": "DX9 では SetRenderState で1項目ずつ変えていた。DX12 ではこれらと Shader などをさらに PSO 1つにまとめる。"
+  },
+  {
+   "name": "D3D11_RENDER_TARGET_BLEND_DESC",
+   "group": "dx11",
+   "summary": "描画先1枚ぶんの色の混ぜ方。D3D11_BLEND_DESC の中に RenderTarget[0]〜[7] として8個入っている。",
+   "fields": [
+    [
+     "BlendEnable",
+     "TRUE / FALSE",
+     "混ぜるか。FALSE なら上書き（不透明）。"
+    ],
+    [
+     "SrcBlend",
+     "SRC_ALPHA",
+     "新しく描く色に掛ける値。"
+    ],
+    [
+     "DestBlend",
+     "INV_SRC_ALPHA",
+     "すでにある色に掛ける値。"
+    ],
+    [
+     "BlendOp",
+     "ADD",
+     "2つをどう合わせるか。結果 = 新しい色 × SrcBlend ＋ 今の色 × DestBlend。"
+    ],
+    [
+     "SrcBlendAlpha / DestBlendAlpha",
+     "ONE / ZERO",
+     "alpha チャンネル自体の計算に掛ける値。この教材では新しい alpha がそのまま残る。"
+    ],
+    [
+     "BlendOpAlpha",
+     "ADD",
+     "alpha チャンネルの合わせ方。"
+    ],
+    [
+     "RenderTargetWriteMask",
+     "COLOR_WRITE_ENABLE_ALL",
+     "R, G, B, A のどれを書くか。0 のままだと何も書かれない。"
+    ]
+   ],
+   "used": "CreatePipelineStates の alphaTarget（alphaBlendDesc.RenderTarget[0] の参照）。",
+   "deep": "描画先が1枚なら [0] だけ設定すればよい。IndependentBlendEnable = FALSE のときは [0] の設定が全部の描画先に使われる。"
+  },
+  {
+   "name": "IDXGIFactory6",
+   "group": "dx12",
+   "summary": "DXGI の入口。GPU の一覧を調べたり、SwapChain を作ったりする。6 は機能が追加された版の番号。",
+   "fields": [
+    [
+     "CreateSwapChainForHwnd",
+     "SwapChain",
+     "ウィンドウ用の SwapChain を作る。"
+    ],
+    [
+     "EnumAdapterByGpuPreference",
+     "GPU 選び",
+     "高性能 / 省電力の GPU を選ぶ（6 で追加された機能）。"
+    ]
+   ],
+   "used": "m_factory。CreateDeviceAndSwapChain。",
+   "deep": "DX11 では D3D11CreateDeviceAndSwapChain が裏で Factory を使っていた。"
+  },
+  {
+   "name": "ID3D12Device",
+   "group": "dx12",
+   "summary": "Resource・DescriptorHeap・Command 関係・RootSignature・PSO・Fence を「作る係」。",
+   "fields": [
+    [
+     "CreateCommittedResource",
+     "Resource",
+     "Buffer と Texture をメモリごと作る。"
+    ],
+    [
+     "CreateDescriptorHeap / Create〇〇View",
+     "Descriptor",
+     "棚を作り、棚の中に札（View）を書く。"
+    ],
+    [
+     "CreateCommandQueue / Allocator / List",
+     "命令",
+     "命令を記録して送る係を作る。"
+    ],
+    [
+     "CreateRootSignature / CreateGraphicsPipelineState",
+     "描き方",
+     "Shader への渡し方の表と PSO を作る。"
+    ],
+    [
+     "CreateFence",
+     "同期",
+     "GPU の完了を待つ番号札を作る。"
+    ]
+   ],
+   "used": "m_device。",
+   "deep": "DX11 の Device と同じく作るだけ。ただし作る物が増え、View は「オブジェクト」ではなく棚に書く札になった。"
+  },
+  {
+   "name": "ID3D12CommandQueue",
+   "group": "dx12",
+   "summary": "記録した CommandList を GPU へ送る窓口。表示（Present）や Fence の Signal もこの順番に並ぶ。",
+   "fields": [
+    [
+     "ExecuteCommandLists",
+     "送る",
+     "記録済みの CommandList を GPU に実行させる。"
+    ],
+    [
+     "Signal",
+     "印",
+     "ここまで終わったら Fence をこの値にして、と予約する。"
+    ]
+   ],
+   "used": "m_commandQueue。ExecuteCommandList / WaitForGpu。SwapChain の作成にも渡す。",
+   "deep": "DX11 では Context が裏で持っていた。"
+  },
+  {
+   "name": "IDXGISwapChain3",
+   "group": "dx12",
+   "summary": "SwapChain の新しい版。「今どちらの BackBuffer に描くか」を聞ける。",
+   "fields": [
+    [
+     "GetCurrentBackBufferIndex",
+     "0 か 1",
+     "今のフレームで描く BackBuffer の番号。"
+    ],
+    [
+     "GetBuffer",
+     "BackBuffer",
+     "BackBuffer の Resource を取り出す。"
+    ],
+    [
+     "Present",
+     "表示",
+     "表示を予約する（Queue の命令の後に並ぶ）。"
+    ]
+   ],
+   "used": "m_swapChain。",
+   "deep": "DX11 では常に GetBuffer(0) でよかった。DX12 は BackBuffer 2枚を自分で持ち、番号で使い分ける。"
+  },
+  {
+   "name": "ID3D12CommandAllocator",
+   "group": "dx12",
+   "summary": "CommandList が記録した命令を書きためるメモリ。",
+   "fields": [
+    [
+     "Reset",
+     "空にする",
+     "中身を捨てて再利用する。GPU がまだ使っていたら壊れるので、完了を待ってから呼ぶ。"
+    ]
+   ],
+   "used": "m_commandAllocator。BeginFrame / UploadSceneResources。",
+   "deep": "本物のゲームはフレーム数ぶんの Allocator を持ち、GPU を待たずに次のフレームを記録する。"
+  },
+  {
+   "name": "ID3D12GraphicsCommandList",
+   "group": "dx12",
+   "summary": "描画の命令を記録する係。ここに書いた命令はその場では実行されず、ExecuteCommandLists で GPU に送ったときに実行される。",
+   "fields": [
+    [
+     "Reset / Close",
+     "記録の開始・終了",
+     "Reset で記録を始め、Close で締める。"
+    ],
+    [
+     "ResourceBarrier",
+     "State の切り替え",
+     "Resource の使い方の変更を宣言する。"
+    ],
+    [
+     "IA / RS / OMSet〇〇・SetPipelineState・SetGraphicsRoot〇〇",
+     "設定",
+     "描き方と渡す値を記録する。Reset で全部消える。"
+    ],
+    [
+     "Copy〇〇 / Clear〇〇 / DrawIndexedInstanced",
+     "処理",
+     "コピー・初期化・描画を記録する。"
+    ]
+   ],
+   "used": "m_commandList。",
+   "deep": "DX11 の Context に当たるが「すぐ実行」ではなく「記録」。だから Barrier・Fence・ConstantBuffer の場所分けが必要になる。"
+  },
+  {
+   "name": "ID3D12Fence",
+   "group": "dx12",
+   "summary": "GPU がどこまで命令を終えたかを表す番号札。",
+   "fields": [
+    [
+     "GetCompletedValue",
+     "今の値",
+     "GPU が最後に到達した番号。"
+    ],
+    [
+     "SetEventOnCompletion",
+     "合図",
+     "この値になったら Event で知らせてもらう。"
+    ]
+   ],
+   "used": "m_fence。WaitForGpu。",
+   "deep": "Queue の Signal で「ここまで来たら番号を上げて」と予約し、CPU はその番号になるまで待つ。DX11 では Direct3D が裏でやっていた。"
+  },
+  {
+   "name": "ID3D12RootSignature",
+   "group": "dx12",
+   "summary": "Shader に何を何番で渡すかの表（b0 に行列の番地、t0 に棚の場所、s0 は埋め込み）。",
+   "fields": [
+    [
+     "作り方",
+     "D3D12SerializeRootSignature → CreateRootSignature",
+     "D3D12_ROOT_SIGNATURE_DESC を変換してから作る。"
+    ],
+    [
+     "つなぎ方",
+     "SetGraphicsRootSignature",
+     "描く前に記録する。これより前に Root の引数は設定できない。"
+    ]
+   ],
+   "used": "m_rootSignature。",
+   "deep": "DX11 では VSSetConstantBuffers(0, …) の番号が表の代わりで、表そのものは Direct3D が持っていた。"
+  },
+  {
+   "name": "ID3D12PipelineState",
+   "group": "dx12",
+   "summary": "PSO。Shader・InputLayout・Rasterizer・Blend・Depth・描画先の形式などを1つに固めた描き方の設定一式。",
+   "fields": [
+    [
+     "作り方",
+     "CreateGraphicsPipelineState",
+     "D3D12_GRAPHICS_PIPELINE_STATE_DESC から作る。重いので起動時に作っておく。"
+    ],
+    [
+     "切り替え",
+     "SetPipelineState",
+     "不透明用と半透明用を切り替える。"
+    ]
+   ],
+   "used": "m_opaquePSO / m_alphaBlendPSO。",
+   "deep": "Blend だけを後から変えることはできない。組み合わせの数だけ PSO を作る。DX11 の State オブジェクト5種類 + Shader + InputLayout に当たる。"
+  },
+  {
+   "name": "D3D12_HEAP_TYPE",
+   "group": "dx12",
+   "summary": "Resource を置くメモリの種類（D3D12_HEAP_TYPE_*）を表す型。",
+   "fields": [
+    [
+     "D3D12_HEAP_TYPE_DEFAULT",
+     "GPU 専用",
+     "速い。CPU からは見えない。"
+    ],
+    [
+     "D3D12_HEAP_TYPE_UPLOAD",
+     "CPU が書ける",
+     "転送用や毎フレーム書く ConstantBuffer。"
+    ],
+    [
+     "D3D12_HEAP_TYPE_READBACK",
+     "CPU が読める",
+     "GPU の結果を CPU で読む。"
+    ]
+   ],
+   "used": "HeapProperties の引数。",
+   "deep": "DX11 の Usage、DX9 の D3DPOOL に当たる。"
+  },
+  {
+   "name": "D3D12_RENDER_TARGET_BLEND_DESC",
+   "group": "dx12",
+   "summary": "描画先1枚ぶんの色の混ぜ方。D3D12_BLEND_DESC の中に RenderTarget[0]〜[7] として8個入っている。項目は DX11 の D3D11_RENDER_TARGET_BLEND_DESC と同じ（LogicOp が増えた）。",
+   "fields": [
+    [
+     "BlendEnable",
+     "TRUE / FALSE",
+     "混ぜるか。FALSE なら上書き（不透明）。"
+    ],
+    [
+     "SrcBlend / DestBlend",
+     "SRC_ALPHA / INV_SRC_ALPHA",
+     "新しい色と今の色に掛ける値。"
+    ],
+    [
+     "BlendOp",
+     "ADD",
+     "結果 = 新しい色 × SrcBlend ＋ 今の色 × DestBlend。"
+    ],
+    [
+     "SrcBlendAlpha / DestBlendAlpha / BlendOpAlpha",
+     "ONE / ZERO / ADD",
+     "alpha チャンネル自体の計算。"
+    ],
+    [
+     "LogicOpEnable / LogicOp",
+     "FALSE",
+     "色をビット演算で合わせる（DX12 で追加。普通は使わない）。"
+    ],
+    [
+     "RenderTargetWriteMask",
+     "COLOR_WRITE_ENABLE_ALL",
+     "R, G, B, A のどれを書くか。0 のままだと何も書かれない。"
+    ]
+   ],
+   "used": "CreatePipelineStates の alphaTarget（alphaDesc.BlendState.RenderTarget[0] の参照）。",
+   "deep": "DX12 では BlendState も PSO の一部なので、この設定を変えたら PSO をもう1つ作る。"
   }
  ],
  "apis": [
