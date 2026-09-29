@@ -1,5 +1,5 @@
 // Reference ページの表示処理。
-// データは lessons.js（手順）・reference-code.js（Preview から生成したコード）・dictionary.js（辞書）にある。
+// データは lessons.js（手順）・reference-code.js（Preview から生成したコード）・dictionary.js（辞書）・macros.js（定数・マクロの辞書）にある。
 "use strict";
 
 const GENERATIONS = ["dx9", "dx11", "dx12"];
@@ -137,13 +137,17 @@ function buildIndex() {
   DICTIONARY.types.filter(type => groups.has(type.group) || type.group === "wic" || type.group === "win32").forEach(type => {
     type.name.split(" / ").forEach(part => types.set(part.trim(), type));
   });
+  const macros = new Map();  // 値の名前 → その値が属する系統
+  MACROS.filter(family => groups.has(family.group)).forEach(family => {
+    family.values.forEach(([name]) => macros.set(name, family));
+  });
   const functions = new Map();
   steps.forEach(step => {
     if (step.type !== "code") return;
     const names = step.kind === "helpers" ? step.target : step.kind === "member" ? [step.target] : [];
     names.forEach(name => functions.set(name, step));
   });
-  index = { apis, types, functions };
+  index = { apis, types, macros, functions };
 }
 
 // 同じ名前の API が複数あるときは、「->」の左側の変数名から選ぶ（m_swapChain->Present など）。
@@ -191,6 +195,9 @@ function linkWord(word, code, position) {
   }
   if (index.types.has(word)) {
     return `<button type="button" class="ref type" data-type="${escapeHtml(index.types.get(word).name)}">${word}</button>`;
+  }
+  if (index.macros.has(word)) {
+    return `<button type="button" class="ref macro" data-macro="${word}">${word}</button>`;
   }
   return word;
 }
@@ -407,6 +414,7 @@ function dictionaryEntries() {
     concepts: DICTIONARY.concepts,
     types: DICTIONARY.types.filter(type => groups.has(type.group) || type.group === "wic" || type.group === "win32"),
     apis: DICTIONARY.apis.filter(api => groups.has(api.group)),
+    macros: MACROS.filter(family => groups.has(family.group)),
   };
 }
 
@@ -414,12 +422,13 @@ function renderDictionary() {
   const entries = dictionaryEntries();
   const state = loadState();
   const tab = state.dictionaryTab ?? "terms";
-  const tabs = [["terms", "用語"], ["concepts", "しくみ"], ["types", "型・構造体"], ["apis", "関数（API）"]];
+  const tabs = [["terms", "用語"], ["concepts", "しくみ"], ["types", "型・構造体"], ["apis", "関数（API）"], ["macros", "定数・マクロ"]];
   const list = {
     terms: entries.terms.map(term => `<div class="dict-item" data-term="${escapeHtml(term.name)}"><dt>${escapeHtml(term.name)}</dt><dd>${inline(term.text)}</dd></div>`),
     concepts: entries.concepts.map(concept => `<div class="dict-item" data-term="${escapeHtml(concept.name)}"><dt>${escapeHtml(concept.name)}</dt><dd><p>${inline(concept.beginner)}</p><p class="muted">${inline(concept.why)}</p></dd></div>`),
     types: entries.types.map(type => `<div class="dict-item"><dt><button type="button" class="ref type" data-type="${escapeHtml(type.name)}">${escapeHtml(type.name)}</button></dt><dd>${inline(type.summary)}</dd></div>`),
     apis: entries.apis.map(api => `<div class="dict-item"><dt><button type="button" class="ref api" data-api="${escapeHtml(api.name)}">${escapeHtml(api.name)}</button></dt><dd>${inline(api.summary)}</dd></div>`),
+    macros: entries.macros.map(family => `<div class="dict-item"><dt><button type="button" class="ref macro" data-macro="${escapeHtml(family.values[0][0])}">${escapeHtml(family.title)}</button></dt><dd>${inline(family.summary)}</dd></div>`),
   };
   document.querySelector("#dictionary").innerHTML = `
     <h2>辞書（${escapeHtml(LESSONS[generation].label)}）</h2>
@@ -455,12 +464,42 @@ function typeCard(type) {
     ${type.deep ? `<h4>もう一歩</h4><p>${inline(type.deep)}</p>` : ""}`;
 }
 
+// 定数・マクロは系統ごとに表示し、押した値に印を付ける。教材のコードで使っている値には「使用」を付ける。
+function macroCard(family, name) {
+  const code = codeWordsOfGeneration();
+  return `
+    <h3>${escapeHtml(family.title)}</h3>
+    <p class="drawer-group">${escapeHtml(DICTIONARY.groups[family.group] ?? family.group)}</p>
+    <p>${inline(family.summary)}</p>
+    <h4>値（「使用」はこの教材のコードで使っている値）</h4>
+    <dl class="macro-values">${family.values.map(([value, text]) => `
+      <div class="${value === name ? "current" : ""}"><dt><code>${escapeHtml(value)}</code>${code.has(value) ? `<span class="used">使用</span>` : ""}</dt><dd>${inline(text)}</dd></div>`).join("")}
+    </dl>
+    ${family.note ? `<p class="drawer-note">${inline(family.note)}</p>` : ""}`;
+}
+
+let codeWordsCache = {};
+function codeWordsOfGeneration() {
+  if (!codeWordsCache[generation]) {
+    const code = CODE[generation];
+    const text = [...Object.values(code.blocks), ...Object.values(code.functions), code.shader].filter(Boolean).map(part => part.code).join("\n");
+    codeWordsCache[generation] = new Set(text.match(/\w+/g));
+  }
+  return codeWordsCache[generation];
+}
+
+function findMacroFamily(name) {
+  return MACROS.find(family => family.values.some(([value]) => value === name));
+}
+
 function openDrawer(kind, name) {
   const drawer = document.querySelector("#drawer");
-  const item = kind === "api" ? DICTIONARY.apis.find(api => api.name === name) : DICTIONARY.types.find(type => type.name === name);
+  const item = kind === "api" ? DICTIONARY.apis.find(api => api.name === name)
+    : kind === "macro" ? findMacroFamily(name)
+    : DICTIONARY.types.find(type => type.name === name);
   if (!item) return;
-  document.querySelector("#drawer-kind").textContent = kind === "api" ? "関数（API）" : "型・構造体";
-  document.querySelector("#drawer-body").innerHTML = kind === "api" ? apiCard(item) : typeCard(item);
+  document.querySelector("#drawer-kind").textContent = { api: "関数（API）", macro: "定数・マクロ" }[kind] ?? "型・構造体";
+  document.querySelector("#drawer-body").innerHTML = kind === "api" ? apiCard(item) : kind === "macro" ? macroCard(item, name) : typeCard(item);
   drawer.hidden = false;
   drawer.querySelector(".drawer-body").scrollTop = 0;
 }
@@ -481,6 +520,7 @@ function searchItems() {
     ...entries.concepts.map(concept => ({ label: concept.name, detail: concept.beginner, keywords: `${concept.name} ${concept.short} ${concept.beginner}`, kind: "しくみ", open: () => navigateToTerm("concepts", concept.name) })),
     ...entries.apis.map(api => ({ label: api.name, detail: api.summary, keywords: `${api.name} ${api.summary}`, kind: "API", open: () => pushDrawer("api", api.name) })),
     ...entries.types.map(type => ({ label: type.name, detail: type.summary, keywords: `${type.name} ${type.summary}`, kind: "型", open: () => pushDrawer("type", type.name) })),
+    ...entries.macros.flatMap(family => family.values.map(([value, text]) => ({ label: value, detail: text, keywords: `${value} ${family.title} ${text}`, kind: "定数", open: () => pushDrawer("macro", value) }))),
   ];
 }
 
@@ -670,6 +710,8 @@ document.addEventListener("click", event => {
     pushDrawer("api", target.dataset.api);
   } else if (target.dataset.type) {
     pushDrawer("type", target.dataset.type);
+  } else if (target.dataset.macro) {
+    pushDrawer("macro", target.dataset.macro);
   } else if (target.dataset.dictTab) {
     openDictionaryTab(target.dataset.dictTab);
   } else if (target.dataset.result) {

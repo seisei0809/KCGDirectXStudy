@@ -421,7 +421,7 @@ const LESSONS = {
               "DX9 との違いは2つです。頂点の形は FVF ではなく InputLayout（あとの手順）で伝えます。また、行列を Shader へ渡すための SceneConstants があります。"
             ],
             "look": [
-              "SceneConstants は、HLSL の cbuffer SceneConstants と同じ形にする。大きさは 16byte の倍数（static_assert で確認している）"
+              "SceneConstants は、HLSL の cbuffer SceneConstants と同じ形にする（cbuffer の中身は 16byte 単位で並ぶ。行列1つの 64byte ならそのまま一致する）"
             ]
           },
           {

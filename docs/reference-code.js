@@ -464,7 +464,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderClearOnly",
+      "comment": "",
+      "code": "        // TODO: RenderClearOnly"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -479,7 +484,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderOneObject",
+      "comment": "",
+      "code": "        // TODO: RenderOneObject"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -494,7 +504,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderFullScene",
+      "comment": "",
+      "code": "        // TODO: RenderFullScene"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -514,7 +529,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateDevice",
+      "comment": "",
+      "code": "        // TODO: CreateDevice"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -529,7 +549,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: PresentFrame",
+      "comment": "",
+      "code": "        // TODO: PresentFrame"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -544,7 +569,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateGeometryBuffers",
+      "comment": "",
+      "code": "        // TODO: CreateGeometryBuffers"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -559,7 +589,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateIconTexture",
+      "comment": "",
+      "code": "        // TODO: CreateIconTexture"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -574,7 +609,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: ConfigureFixedFunctionPipeline",
+      "comment": "",
+      "code": "        // TODO: ConfigureFixedFunctionPipeline"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -589,7 +629,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: SetCameraTransforms",
+      "comment": "",
+      "code": "        // TODO: SetCameraTransforms"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -604,7 +649,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: DrawObject",
+      "comment": "",
+      "code": "        // TODO: DrawObject"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2307,9 +2357,9 @@ const CODE = {
     ]
    },
    "types": {
-    "code": "// F1 / F2 で切り替える投影方法。\nenum class ProjectionMode\n{\n    Orthographic, // 平行投影（遠近感なし）\n    Perspective,  // 透視投影（遠近感あり）\n};\n\n// F3〜F6 で切り替える、途中確認用の描画内容。\nenum class RenderStage\n{\n    ClearOnly, // F3: 背景色だけ\n    Sprite,    // F4: 画像を貼った四角形（Sprite）1枚\n    Cube,      // F5: 立方体1個\n    FullScene, // F6: 完成画面\n};\n\n// カメラ（View）と投影（Projection）の行列をまとめて返すための入れ物。\nstruct ViewProjectionMatrices\n{\n    XMMATRIX view;\n    XMMATRIX projection;\n};\n\n// PNG を読み込んだ結果。1画素 = B, G, R, A の4byte。\nstruct ImageData\n{\n    UINT width = 0;\n    UINT height = 0;\n    std::vector<std::uint8_t> pixels;\n};\n\n// 1頂点が持つデータ。位置・色・Texture 上の位置（UV）。\n// どの byte が何なのかは、CreateShaders の InputLayout で GPU に伝える。\nstruct Vertex\n{\n    XMFLOAT3 position;\n    XMFLOAT4 color;\n    XMFLOAT2 uv;\n};\n\n// 大きな IndexBuffer の中で、1つの物体が使う範囲。\nstruct DrawRange\n{\n    UINT startIndex = 0;\n    UINT indexCount = 0;\n};\n\n// すべての物体の頂点と Index を1つにまとめたもの。\nstruct SceneGeometry\n{\n    std::vector<Vertex> vertices;\n    std::vector<std::uint16_t> indices;\n    DrawRange sprite;\n    DrawRange floor;\n    DrawRange cube;\n    DrawRange pyramid;\n    DrawRange transparentPanel;\n};\n\n// Shader の cbuffer SceneConstants（register b0）と同じ形にする。\n// ConstantBuffer の大きさは 16byte の倍数でなければならない（float4x4 は 64byte）。\nstruct SceneConstants\n{\n    XMFLOAT4X4 worldViewProjection;\n};\nstatic_assert(sizeof(SceneConstants) % 16 == 0);",
+    "code": "// F1 / F2 で切り替える投影方法。\nenum class ProjectionMode\n{\n    Orthographic, // 平行投影（遠近感なし）\n    Perspective,  // 透視投影（遠近感あり）\n};\n\n// F3〜F6 で切り替える、途中確認用の描画内容。\nenum class RenderStage\n{\n    ClearOnly, // F3: 背景色だけ\n    Sprite,    // F4: 画像を貼った四角形（Sprite）1枚\n    Cube,      // F5: 立方体1個\n    FullScene, // F6: 完成画面\n};\n\n// カメラ（View）と投影（Projection）の行列をまとめて返すための入れ物。\nstruct ViewProjectionMatrices\n{\n    XMMATRIX view;\n    XMMATRIX projection;\n};\n\n// PNG を読み込んだ結果。1画素 = B, G, R, A の4byte。\nstruct ImageData\n{\n    UINT width = 0;\n    UINT height = 0;\n    std::vector<std::uint8_t> pixels;\n};\n\n// 1頂点が持つデータ。位置・色・Texture 上の位置（UV）。\n// どの byte が何なのかは、CreateShaders の InputLayout で GPU に伝える。\nstruct Vertex\n{\n    XMFLOAT3 position;\n    XMFLOAT4 color;\n    XMFLOAT2 uv;\n};\n\n// 大きな IndexBuffer の中で、1つの物体が使う範囲。\nstruct DrawRange\n{\n    UINT startIndex = 0;\n    UINT indexCount = 0;\n};\n\n// すべての物体の頂点と Index を1つにまとめたもの。\nstruct SceneGeometry\n{\n    std::vector<Vertex> vertices;\n    std::vector<std::uint16_t> indices;\n    DrawRange sprite;\n    DrawRange floor;\n    DrawRange cube;\n    DrawRange pyramid;\n    DrawRange transparentPanel;\n};\n\n// Shader の cbuffer SceneConstants（register b0）と同じ形にする。\n// HLSL の cbuffer は 16byte（float4 1つ分）単位で並ぶ。float4x4 は 64byte なのでそのまま一致する。\nstruct SceneConstants\n{\n    XMFLOAT4X4 worldViewProjection;\n};",
     "start": 37,
-    "end": 102,
+    "end": 101,
     "units": [
      {
       "blank": 0,
@@ -2533,7 +2583,7 @@ const CODE = {
      },
      {
       "blank": 1,
-      "comment": "// Shader の cbuffer SceneConstants（register b0）と同じ形にする。\n// ConstantBuffer の大きさは 16byte の倍数でなければならない（float4x4 は 64byte）。",
+      "comment": "// Shader の cbuffer SceneConstants（register b0）と同じ形にする。\n// HLSL の cbuffer は 16byte（float4 1つ分）単位で並ぶ。float4x4 は 64byte なのでそのまま一致する。",
       "code": "struct SceneConstants"
      },
      {
@@ -2550,18 +2600,13 @@ const CODE = {
       "blank": 0,
       "comment": "",
       "code": "};"
-     },
-     {
-      "blank": 0,
-      "comment": "",
-      "code": "static_assert(sizeof(SceneConstants) % 16 == 0);"
      }
     ]
    },
    "renderer": {
     "code": "class Renderer\n{\npublic:\n    void Initialize(HWND hwnd)\n    {\n        CreateDeviceAndSwapChain(hwnd);\n        CreateBackBufferView();\n        CreateShaders();\n        CreateGeometryBuffers();\n        CreateConstantBuffer();\n        CreateIconTexture();\n        CreateDepthBuffer();\n        CreatePipelineStates();\n    }\n\n    void SetProjectionMode(ProjectionMode mode)\n    {\n        m_projectionMode = mode;\n    }\n\n    // F3〜F6 で選ばれた段階の描画を呼ぶ。\n    void Render(RenderStage stage)\n    {\n        switch (stage)\n        {\n        case RenderStage::ClearOnly: RenderClearOnly(); break;\n        case RenderStage::Sprite: RenderOneObject(m_geometry.sprite); break;\n        case RenderStage::Cube: RenderOneObject(m_geometry.cube); break;\n        case RenderStage::FullScene: RenderFullScene(); break;\n        }\n    }\n\n    // 確認 1（F3）: 背景色で塗りつぶして表示するだけ。\n    void RenderClearOnly()\n    {\n        // TODO: RenderClearOnly\n    }\n\n    // 確認 2（F4 / F5）: BackBuffer へ直接、物体を1個だけ描く。\n    void RenderOneObject(const DrawRange& range)\n    {\n        // TODO: RenderOneObject\n    }\n\n    // 完成（F6）: 床・立方体・四角すい・半透明パネルを並べて描く。\n    void RenderFullScene()\n    {\n        // TODO: RenderFullScene\n    }\n\nprivate:\n    void CreateDeviceAndSwapChain(HWND hwnd)\n    {\n        // TODO: CreateDeviceAndSwapChain\n    }\n\n    void CreateBackBufferView()\n    {\n        // TODO: CreateBackBufferView\n    }\n\n    void CreateShaders()\n    {\n        // TODO: CreateShaders\n    }\n\n    void CreateGeometryBuffers()\n    {\n        // TODO: CreateGeometryBuffers\n    }\n\n    void CreateConstantBuffer()\n    {\n        // TODO: CreateConstantBuffer\n    }\n\n    void CreateIconTexture()\n    {\n        // TODO: CreateIconTexture\n    }\n\n    void CreateDepthBuffer()\n    {\n        // TODO: CreateDepthBuffer\n    }\n\n    void CreatePipelineStates()\n    {\n        // TODO: CreatePipelineStates\n    }\n\n    void BindCommonPipeline()\n    {\n        // TODO: BindCommonPipeline\n    }\n\n    void DrawObject(const DrawRange& range, FXMMATRIX world, CXMMATRIX view, CXMMATRIX projection)\n    {\n        // TODO: DrawObject\n    }\n\n    ComPtr<ID3D11Device> m_device;\n    ComPtr<ID3D11DeviceContext> m_context;\n    ComPtr<IDXGISwapChain> m_swapChain;\n    ComPtr<ID3D11RenderTargetView> m_backBufferRTV;\n    ComPtr<ID3D11VertexShader> m_vertexShader;\n    ComPtr<ID3D11PixelShader> m_pixelShader;\n    ComPtr<ID3D11InputLayout> m_inputLayout;\n    ComPtr<ID3D11Buffer> m_vertexBuffer;\n    ComPtr<ID3D11Buffer> m_indexBuffer;\n    ComPtr<ID3D11Buffer> m_constantBuffer;\n    ComPtr<ID3D11ShaderResourceView> m_iconSRV;\n    ComPtr<ID3D11DepthStencilView> m_depthStencilView;\n    ComPtr<ID3D11SamplerState> m_sampler;\n    ComPtr<ID3D11RasterizerState> m_rasterizerState;\n    ComPtr<ID3D11DepthStencilState> m_depthWriteState;\n    ComPtr<ID3D11DepthStencilState> m_depthReadOnlyState;\n    ComPtr<ID3D11BlendState> m_opaqueBlendState;\n    ComPtr<ID3D11BlendState> m_alphaBlendState;\n    SceneGeometry m_geometry;\n    ProjectionMode m_projectionMode = ProjectionMode::Perspective;\n};",
-    "start": 362,
-    "end": 770,
+    "start": 361,
+    "end": 769,
     "units": [
      {
       "blank": 0,
@@ -2715,7 +2760,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderClearOnly",
+      "comment": "",
+      "code": "        // TODO: RenderClearOnly"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2730,7 +2780,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderOneObject",
+      "comment": "",
+      "code": "        // TODO: RenderOneObject"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2745,7 +2800,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderFullScene",
+      "comment": "",
+      "code": "        // TODO: RenderFullScene"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2765,7 +2825,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateDeviceAndSwapChain",
+      "comment": "",
+      "code": "        // TODO: CreateDeviceAndSwapChain"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2780,7 +2845,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateBackBufferView",
+      "comment": "",
+      "code": "        // TODO: CreateBackBufferView"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2795,7 +2865,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateShaders",
+      "comment": "",
+      "code": "        // TODO: CreateShaders"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2810,7 +2885,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateGeometryBuffers",
+      "comment": "",
+      "code": "        // TODO: CreateGeometryBuffers"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2825,7 +2905,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateConstantBuffer",
+      "comment": "",
+      "code": "        // TODO: CreateConstantBuffer"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2840,7 +2925,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateIconTexture",
+      "comment": "",
+      "code": "        // TODO: CreateIconTexture"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2855,7 +2945,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateDepthBuffer",
+      "comment": "",
+      "code": "        // TODO: CreateDepthBuffer"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2870,7 +2965,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreatePipelineStates",
+      "comment": "",
+      "code": "        // TODO: CreatePipelineStates"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2885,7 +2985,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: BindCommonPipeline",
+      "comment": "",
+      "code": "        // TODO: BindCommonPipeline"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -2900,7 +3005,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: DrawObject",
+      "comment": "",
+      "code": "        // TODO: DrawObject"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -3012,8 +3122,8 @@ const CODE = {
    },
    "main": {
     "code": "int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int)\n{\n    try\n    {\n        // WIC は COM の仕組みで動くため、最初に COM を使える状態にする。\n        ThrowIfFailed(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED), \"CoInitializeEx failed.\");\n\n        const HWND hwnd = CreateMainWindow(instance);\n        if (!hwnd)\n        {\n            throw std::runtime_error(\"Window creation failed.\");\n        }\n\n        Renderer renderer;\n        renderer.Initialize(hwnd);\n        RenderStage stage = RenderStage::FullScene;\n\n        MSG message{};\n        while (message.message != WM_QUIT)\n        {\n            // ウィンドウへのメッセージ（キー入力・閉じるなど）があれば先に処理する。\n            if (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))\n            {\n                if (message.message == WM_KEYDOWN)\n                {\n                    switch (message.wParam)\n                    {\n                    case VK_F1: renderer.SetProjectionMode(ProjectionMode::Orthographic); break;\n                    case VK_F2: renderer.SetProjectionMode(ProjectionMode::Perspective); break;\n                    case VK_F3: stage = RenderStage::ClearOnly; break;\n                    case VK_F4: stage = RenderStage::Sprite; break;\n                    case VK_F5: stage = RenderStage::Cube; break;\n                    case VK_F6: stage = RenderStage::FullScene; break;\n                    }\n                }\n                TranslateMessage(&message);\n                DispatchMessageW(&message);\n                continue;\n            }\n\n            // メッセージがなければ、選ばれている段階を1フレーム描く。\n            renderer.Render(stage);\n        }\n\n        CoUninitialize();\n        return static_cast<int>(message.wParam);\n    }\n    catch (const std::exception& exception)\n    {\n        ShowErrorMessage(exception.what());\n        return -1;\n    }\n}",
-    "start": 834,
-    "end": 886,
+    "start": 833,
+    "end": 885,
     "units": [
      {
       "blank": 0,
@@ -3248,8 +3358,8 @@ const CODE = {
     "kind": "helper",
     "signature": "void ThrowIfFailed(HRESULT hr, const char* message)",
     "code": "// HRESULT が失敗を示していたら、例外にして処理を止める。\nvoid ThrowIfFailed(HRESULT hr, const char* message)\n{\n    if (FAILED(hr))\n    {\n        throw std::runtime_error(message);\n    }\n}",
-    "start": 106,
-    "end": 113,
+    "start": 105,
+    "end": 112,
     "units": [
      {
       "blank": 0,
@@ -3292,8 +3402,8 @@ const CODE = {
     "kind": "helper",
     "signature": "void ShowErrorMessage(const char* message)",
     "code": "// 例外のメッセージをダイアログで表示する。文字列は UTF-8 なので、Windows 用の UTF-16 へ変換する。\nvoid ShowErrorMessage(const char* message)\n{\n    const int length = MultiByteToWideChar(CP_UTF8, 0, message, -1, nullptr, 0);\n    std::wstring wideMessage(static_cast<std::size_t>(length), L'\\0');\n    MultiByteToWideChar(CP_UTF8, 0, message, -1, wideMessage.data(), length);\n    MessageBoxW(nullptr, wideMessage.c_str(), kWindowTitle, MB_OK | MB_ICONERROR);\n}",
-    "start": 115,
-    "end": 122,
+    "start": 114,
+    "end": 121,
     "units": [
      {
       "blank": 0,
@@ -3336,8 +3446,8 @@ const CODE = {
     "kind": "helper",
     "signature": "std::filesystem::path GetShaderPath()",
     "code": "std::filesystem::path GetShaderPath()\n{\n    // main.cpp と同じフォルダーの HLSL を使う（HLSL を書き換えたら、ビルドし直さなくても次の起動で反映される）。\n    const std::filesystem::path besideSource = std::filesystem::path(__FILE__).parent_path() / L\"DX11SceneShader.hlsl\";\n    if (std::filesystem::exists(besideSource))\n    {\n        return besideSource;\n    }\n\n    // exe だけを別の PC へ持って行った場合は、ビルド時に exe の隣へコピーされた HLSL を使う。\n    wchar_t executablePath[MAX_PATH]{};\n    GetModuleFileNameW(nullptr, executablePath, MAX_PATH);\n    return std::filesystem::path(executablePath).parent_path() / L\"DX11SceneShader.hlsl\";\n}",
-    "start": 124,
-    "end": 137,
+    "start": 123,
+    "end": 136,
     "units": [
      {
       "blank": 0,
@@ -3400,8 +3510,8 @@ const CODE = {
     "kind": "helper",
     "signature": "ComPtr<ID3DBlob> CompileShader(const std::filesystem::path& path, const char* entryPoint, const char* target)",
     "code": "ComPtr<ID3DBlob> CompileShader(const std::filesystem::path& path, const char* entryPoint, const char* target)\n{\n    // Debug ビルドでは、Shader もデバッグしやすい形でコンパイルする。\n    UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;\n#if defined(_DEBUG)\n    flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;\n#endif\n\n    // HLSL ファイルの entryPoint 関数を、target（例: vs_5_0）の命令へコンパイルする。\n    ComPtr<ID3DBlob> shader;\n    ComPtr<ID3DBlob> errors;\n    const HRESULT hr = D3DCompileFromFile(\n        path.c_str(),\n        nullptr,\n        D3D_COMPILE_STANDARD_FILE_INCLUDE,\n        entryPoint,\n        target,\n        flags,\n        0,\n        shader.GetAddressOf(),\n        errors.GetAddressOf());\n\n    // 失敗したら、コンパイラのエラー文（行番号つき）をそのまま表示する。\n    if (FAILED(hr))\n    {\n        std::string message = \"HLSL のコンパイルに失敗しました。\\n\";\n        if (errors)\n        {\n            message.append(static_cast<const char*>(errors->GetBufferPointer()), errors->GetBufferSize());\n        }\n        throw std::runtime_error(message);\n    }\n    return shader;\n}",
-    "start": 139,
-    "end": 172,
+    "start": 138,
+    "end": 171,
     "units": [
      {
       "blank": 0,
@@ -3509,8 +3619,8 @@ const CODE = {
     "kind": "helper",
     "signature": "std::filesystem::path GetIconPath()",
     "code": "std::filesystem::path GetIconPath()\n{\n    // exe のあるフォルダーから親フォルダーへ向かって Icon.png を探す。\n    wchar_t executablePath[MAX_PATH]{};\n    GetModuleFileNameW(nullptr, executablePath, MAX_PATH);\n\n    std::filesystem::path directory = std::filesystem::path(executablePath).parent_path();\n    for (int i = 0; i < 5; ++i)\n    {\n        const std::filesystem::path candidate = directory / L\"Icon.png\";\n        if (std::filesystem::exists(candidate))\n        {\n            return candidate;\n        }\n        directory = directory.parent_path();\n    }\n\n    throw std::runtime_error(\"Icon.png が見つかりません。PracticeProj（または PreviewProj）フォルダーの中に Icon.png があるか確認してください。\");\n}",
-    "start": 174,
-    "end": 192,
+    "start": 173,
+    "end": 191,
     "units": [
      {
       "blank": 0,
@@ -3598,8 +3708,8 @@ const CODE = {
     "kind": "helper",
     "signature": "ImageData LoadPngWithWIC(const std::filesystem::path& path)",
     "code": "ImageData LoadPngWithWIC(const std::filesystem::path& path)\n{\n    // WIC の入口（Factory）を作る。\n    ComPtr<IWICImagingFactory> factory;\n    ThrowIfFailed(\n        CoCreateInstance(\n            CLSID_WICImagingFactory,\n            nullptr,\n            CLSCTX_INPROC_SERVER,\n            IID_PPV_ARGS(factory.GetAddressOf())),\n        \"CoCreateInstance(CLSID_WICImagingFactory) failed.\");\n\n    // PNG ファイルを開き、1枚目の画像を取り出す。\n    ComPtr<IWICBitmapDecoder> decoder;\n    ThrowIfFailed(\n        factory->CreateDecoderFromFilename(\n            path.c_str(),\n            nullptr,\n            GENERIC_READ,\n            WICDecodeMetadataCacheOnLoad,\n            decoder.GetAddressOf()),\n        \"IWICImagingFactory::CreateDecoderFromFilename failed.\");\n\n    ComPtr<IWICBitmapFrameDecode> frame;\n    ThrowIfFailed(decoder->GetFrame(0, frame.GetAddressOf()), \"IWICBitmapDecoder::GetFrame failed.\");\n\n    // どんな PNG でも、1画素 4byte の BGRA 形式へそろえる。\n    ComPtr<IWICFormatConverter> converter;\n    ThrowIfFailed(factory->CreateFormatConverter(converter.GetAddressOf()), \"IWICImagingFactory::CreateFormatConverter failed.\");\n    ThrowIfFailed(\n        converter->Initialize(\n            frame.Get(),\n            GUID_WICPixelFormat32bppBGRA,\n            WICBitmapDitherTypeNone,\n            nullptr,\n            0.0,\n            WICBitmapPaletteTypeCustom),\n        \"IWICFormatConverter::Initialize failed.\");\n\n    // 画像サイズを調べ、画素を CPU 側の配列へコピーする。\n    ImageData image;\n    ThrowIfFailed(converter->GetSize(&image.width, &image.height), \"IWICBitmapSource::GetSize failed.\");\n    const UINT rowPitch = image.width * 4;\n    image.pixels.resize(static_cast<std::size_t>(rowPitch) * image.height);\n    ThrowIfFailed(\n        converter->CopyPixels(nullptr, rowPitch, static_cast<UINT>(image.pixels.size()), image.pixels.data()),\n        \"IWICBitmapSource::CopyPixels failed.\");\n    return image;\n}",
-    "start": 194,
-    "end": 242,
+    "start": 193,
+    "end": 241,
     "units": [
      {
       "blank": 0,
@@ -3697,8 +3807,8 @@ const CODE = {
     "kind": "helper",
     "signature": "void AppendQuad( SceneGeometry& geometry, XMFLOAT3 p0, XMFLOAT3 p1, XMFLOAT3 p2, XMFLOAT3 p3, XMFLOAT4 color, float uvScale = 1.0f)",
     "code": "// 4頂点の四角形を、2枚の三角形（Index 6個）として追加する。\n// p0 = 左下、p1 = 左上、p2 = 右上、p3 = 右下 の順で渡す。\nvoid AppendQuad(\n    SceneGeometry& geometry,\n    XMFLOAT3 p0,\n    XMFLOAT3 p1,\n    XMFLOAT3 p2,\n    XMFLOAT3 p3,\n    XMFLOAT4 color,\n    float uvScale = 1.0f)\n{\n    const std::uint16_t base = static_cast<std::uint16_t>(geometry.vertices.size());\n    geometry.vertices.push_back({ p0, color, { 0.0f, uvScale } });\n    geometry.vertices.push_back({ p1, color, { 0.0f, 0.0f } });\n    geometry.vertices.push_back({ p2, color, { uvScale, 0.0f } });\n    geometry.vertices.push_back({ p3, color, { uvScale, uvScale } });\n\n    const std::uint16_t quadIndices[] = { 0, 1, 2, 0, 2, 3 };\n    for (const std::uint16_t index : quadIndices)\n    {\n        geometry.indices.push_back(static_cast<std::uint16_t>(base + index));\n    }\n}",
-    "start": 244,
-    "end": 266,
+    "start": 243,
+    "end": 265,
     "units": [
      {
       "blank": 0,
@@ -3771,8 +3881,8 @@ const CODE = {
     "kind": "helper",
     "signature": "void AppendTriangle( SceneGeometry& geometry, XMFLOAT3 p0, XMFLOAT3 p1, XMFLOAT3 p2, XMFLOAT4 color)",
     "code": "// 3頂点の三角形（Index 3個）を追加する。\nvoid AppendTriangle(\n    SceneGeometry& geometry,\n    XMFLOAT3 p0,\n    XMFLOAT3 p1,\n    XMFLOAT3 p2,\n    XMFLOAT4 color)\n{\n    const std::uint16_t base = static_cast<std::uint16_t>(geometry.vertices.size());\n    geometry.vertices.push_back({ p0, color, { 0.0f, 1.0f } });\n    geometry.vertices.push_back({ p1, color, { 0.5f, 0.0f } });\n    geometry.vertices.push_back({ p2, color, { 1.0f, 1.0f } });\n\n    for (std::uint16_t index = 0; index < 3; ++index)\n    {\n        geometry.indices.push_back(static_cast<std::uint16_t>(base + index));\n    }\n}",
-    "start": 268,
-    "end": 285,
+    "start": 267,
+    "end": 284,
     "units": [
      {
       "blank": 0,
@@ -3835,8 +3945,8 @@ const CODE = {
     "kind": "helper",
     "signature": "SceneGeometry BuildSceneGeometry()",
     "code": "SceneGeometry BuildSceneGeometry()\n{\n    SceneGeometry geometry;\n    const XMFLOAT4 white{ 1.0f, 1.0f, 1.0f, 1.0f };\n\n    // 画像を1枚貼っただけの四角形（Sprite）。\n    geometry.sprite.startIndex = static_cast<UINT>(geometry.indices.size());\n    AppendQuad(geometry, { -2, -2, 0 }, { -2, 2, 0 }, { 2, 2, 0 }, { 2, -2, 0 }, white);\n    geometry.sprite.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.sprite.startIndex;\n\n    // 床。UV を 0～4 にして、Texture を 4×4 回繰り返す。\n    geometry.floor.startIndex = static_cast<UINT>(geometry.indices.size());\n    AppendQuad(geometry, { -5, -1.25f, -5 }, { -5, -1.25f, 5 }, { 5, -1.25f, 5 }, { 5, -1.25f, -5 }, white, 4.0f);\n    geometry.floor.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.floor.startIndex;\n\n    // 立方体。6面それぞれに Texture 全体を貼るため、面ごとに頂点を分ける。\n    geometry.cube.startIndex = static_cast<UINT>(geometry.indices.size());\n    AppendQuad(geometry, { -1, -1, -1 }, { -1, 1, -1 }, { 1, 1, -1 }, { 1, -1, -1 }, white); // 手前\n    AppendQuad(geometry, { 1, -1, 1 }, { 1, 1, 1 }, { -1, 1, 1 }, { -1, -1, 1 }, white);     // 奥\n    AppendQuad(geometry, { -1, -1, 1 }, { -1, 1, 1 }, { -1, 1, -1 }, { -1, -1, -1 }, white); // 左\n    AppendQuad(geometry, { 1, -1, -1 }, { 1, 1, -1 }, { 1, 1, 1 }, { 1, -1, 1 }, white);     // 右\n    AppendQuad(geometry, { -1, 1, -1 }, { -1, 1, 1 }, { 1, 1, 1 }, { 1, 1, -1 }, white);     // 上\n    AppendQuad(geometry, { -1, -1, 1 }, { -1, -1, -1 }, { 1, -1, -1 }, { 1, -1, 1 }, white); // 下\n    geometry.cube.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.cube.startIndex;\n\n    // 四角すい。底面1枚と側面4枚。\n    geometry.pyramid.startIndex = static_cast<UINT>(geometry.indices.size());\n    const XMFLOAT3 top{ 0.0f, 1.1f, 0.0f };\n    const XMFLOAT3 b0{ -1, -1, -1 };\n    const XMFLOAT3 b1{ -1, -1, 1 };\n    const XMFLOAT3 b2{ 1, -1, 1 };\n    const XMFLOAT3 b3{ 1, -1, -1 };\n    AppendQuad(geometry, b1, b0, b3, b2, white);\n    AppendTriangle(geometry, b0, top, b3, white);\n    AppendTriangle(geometry, b3, top, b2, white);\n    AppendTriangle(geometry, b2, top, b1, white);\n    AppendTriangle(geometry, b1, top, b0, white);\n    geometry.pyramid.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.pyramid.startIndex;\n\n    // 半透明のパネル。頂点色の alpha = 0.35。\n    geometry.transparentPanel.startIndex = static_cast<UINT>(geometry.indices.size());\n    AppendQuad(\n        geometry,\n        { -2.7f, -0.8f, -1.8f },\n        { -2.7f, 1.8f, -1.8f },\n        { 2.7f, 1.8f, -1.8f },\n        { 2.7f, -0.8f, -1.8f },\n        { 0.25f, 0.65f, 1.0f, 0.35f },\n        2.0f);\n    geometry.transparentPanel.indexCount = static_cast<UINT>(geometry.indices.size()) - geometry.transparentPanel.startIndex;\n\n    return geometry;\n}",
-    "start": 287,
-    "end": 339,
+    "start": 286,
+    "end": 338,
     "units": [
      {
       "blank": 0,
@@ -4019,8 +4129,8 @@ const CODE = {
     "kind": "helper",
     "signature": "ViewProjectionMatrices BuildViewProjection(ProjectionMode mode)",
     "code": "ViewProjectionMatrices BuildViewProjection(ProjectionMode mode)\n{\n    // カメラ（View）はどちらの投影でも同じ。斜め上から原点のあたりを見下ろす。\n    const XMMATRIX view = XMMatrixLookAtLH(\n        XMVectorSet(0.0f, 3.2f, -7.5f, 1.0f),   // カメラの位置\n        XMVectorSet(0.0f, -0.1f, 0.0f, 1.0f),   // 見る点\n        XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));   // 上方向\n    const float aspect = static_cast<float>(kClientWidth) / static_cast<float>(kClientHeight);\n\n    // 平行投影: 遠くの物も近くの物も同じ大きさで映る。縦 9 の範囲が画面に収まる。\n    if (mode == ProjectionMode::Orthographic)\n    {\n        return { view, XMMatrixOrthographicLH(9.0f * aspect, 9.0f, 0.1f, 100.0f) };\n    }\n\n    // 透視投影: 遠くの物ほど小さく映る。上下の視野角は 60 度。\n    return { view, XMMatrixPerspectiveFovLH(XMConvertToRadians(60.0f), aspect, 0.1f, 100.0f) };\n}",
-    "start": 341,
-    "end": 358,
+    "start": 340,
+    "end": 357,
     "units": [
      {
       "blank": 0,
@@ -4078,8 +4188,8 @@ const CODE = {
     "kind": "member",
     "signature": "void DrawObject(const DrawRange& range, FXMMATRIX world, CXMMATRIX view, CXMMATRIX projection)",
     "code": "// World × View × Projection をまとめた行列を ConstantBuffer へ書き込む。\n// HLSL は列優先で行列を読むため、転置（Transpose）してから渡す。\nSceneConstants constants{};\nXMStoreFloat4x4(&constants.worldViewProjection, XMMatrixTranspose(world * view * projection));\nm_context->UpdateSubresource(m_constantBuffer.Get(), 0, nullptr, &constants, 0, 0);\n\n// IndexBuffer の startIndex から indexCount 個の Index を使って描く。\nm_context->DrawIndexed(range.indexCount, range.startIndex, 0);",
-    "start": 740,
-    "end": 747,
+    "start": 739,
+    "end": 746,
     "units": [
      {
       "blank": 0,
@@ -4107,8 +4217,8 @@ const CODE = {
     "kind": "member",
     "signature": "void BindCommonPipeline()",
     "code": "// 入力: 頂点の読み方・三角形の並び・VertexBuffer・IndexBuffer。\nconst UINT stride = sizeof(Vertex);\nconst UINT offset = 0;\nm_context->IASetInputLayout(m_inputLayout.Get());\nm_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);\nm_context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);\nm_context->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);\n\n// Shader と、Shader が読む ConstantBuffer（b0）・Sampler（s0）。\nm_context->VSSetShader(m_vertexShader.Get(), nullptr, 0);\nm_context->VSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf());\nm_context->PSSetShader(m_pixelShader.Get(), nullptr, 0);\nm_context->PSSetSamplers(0, 1, m_sampler.GetAddressOf());\n\n// 描く範囲（Viewport = 画面全体）と、三角形の塗り方。\nconst D3D11_VIEWPORT viewport{ 0.0f, 0.0f, static_cast<float>(kClientWidth), static_cast<float>(kClientHeight), 0.0f, 1.0f };\nm_context->RSSetViewports(1, &viewport);\nm_context->RSSetState(m_rasterizerState.Get());",
-    "start": 718,
-    "end": 735,
+    "start": 717,
+    "end": 734,
     "units": [
      {
       "blank": 0,
@@ -4181,8 +4291,8 @@ const CODE = {
     "kind": "member",
     "signature": "void CreatePipelineStates()",
     "code": "// Sampler: UV が 0～1 を超えたら繰り返し（WRAP）、拡大縮小はなめらかに補間する。\nD3D11_SAMPLER_DESC samplerDesc{};\nsamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;\nsamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;\nsamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;\nsamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;\nsamplerDesc.MaxAnisotropy = 1;\nsamplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;\nsamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;\nThrowIfFailed(m_device->CreateSamplerState(&samplerDesc, m_sampler.GetAddressOf()), \"CreateSamplerState failed.\");\n\n// Rasterizer: 三角形を塗りつぶし、裏向きの面も描く。\nD3D11_RASTERIZER_DESC rasterizerDesc{};\nrasterizerDesc.FillMode = D3D11_FILL_SOLID;\nrasterizerDesc.CullMode = D3D11_CULL_NONE;\nrasterizerDesc.DepthClipEnable = TRUE;\nThrowIfFailed(m_device->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf()), \"CreateRasterizerState failed.\");\n\n// Depth の2種類: 判定して書き込む（不透明）/ 判定だけ（半透明）。\nD3D11_DEPTH_STENCIL_DESC depthWriteDesc{};\ndepthWriteDesc.DepthEnable = TRUE;\ndepthWriteDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;\ndepthWriteDesc.DepthFunc = D3D11_COMPARISON_LESS;\nThrowIfFailed(m_device->CreateDepthStencilState(&depthWriteDesc, m_depthWriteState.GetAddressOf()), \"CreateDepthStencilState(write) failed.\");\n\nD3D11_DEPTH_STENCIL_DESC depthReadOnlyDesc = depthWriteDesc;\ndepthReadOnlyDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;\nThrowIfFailed(m_device->CreateDepthStencilState(&depthReadOnlyDesc, m_depthReadOnlyState.GetAddressOf()), \"CreateDepthStencilState(read only) failed.\");\n\n// Blend の2種類: 上書き（不透明）/ alpha で混ぜる（半透明）。\n// 半透明の式: 結果 = 新しい色 × alpha + 今の色 × (1 - alpha)\nD3D11_BLEND_DESC opaqueBlendDesc{};\nopaqueBlendDesc.RenderTarget[0].BlendEnable = FALSE;\nopaqueBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;\nThrowIfFailed(m_device->CreateBlendState(&opaqueBlendDesc, m_opaqueBlendState.GetAddressOf()), \"CreateBlendState(opaque) failed.\");\n\nD3D11_BLEND_DESC alphaBlendDesc = opaqueBlendDesc;\nD3D11_RENDER_TARGET_BLEND_DESC& alphaTarget = alphaBlendDesc.RenderTarget[0];\nalphaTarget.BlendEnable = TRUE;\nalphaTarget.SrcBlend = D3D11_BLEND_SRC_ALPHA;\nalphaTarget.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;\nalphaTarget.BlendOp = D3D11_BLEND_OP_ADD;\nalphaTarget.SrcBlendAlpha = D3D11_BLEND_ONE;\nalphaTarget.DestBlendAlpha = D3D11_BLEND_ZERO;\nalphaTarget.BlendOpAlpha = D3D11_BLEND_OP_ADD;\nThrowIfFailed(m_device->CreateBlendState(&alphaBlendDesc, m_alphaBlendState.GetAddressOf()), \"CreateBlendState(alpha) failed.\");",
-    "start": 668,
-    "end": 713,
+    "start": 667,
+    "end": 712,
     "units": [
      {
       "blank": 0,
@@ -4370,8 +4480,8 @@ const CODE = {
     "kind": "member",
     "signature": "void CreateDepthBuffer()",
     "code": "// 奥行き（Depth）を記録する Texture2D を作る。1画素 = Depth 24bit + Stencil 8bit。\nD3D11_TEXTURE2D_DESC depthDesc{};\ndepthDesc.Width = kClientWidth;\ndepthDesc.Height = kClientHeight;\ndepthDesc.MipLevels = 1;\ndepthDesc.ArraySize = 1;\ndepthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;\ndepthDesc.SampleDesc.Count = 1;\ndepthDesc.Usage = D3D11_USAGE_DEFAULT;\ndepthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;\n\nComPtr<ID3D11Texture2D> depthTexture;\nThrowIfFailed(\n    m_device->CreateTexture2D(&depthDesc, nullptr, depthTexture.GetAddressOf()),\n    \"CreateTexture2D(Depth) failed.\");\n\n// 「Depth の書き込み先として使う」ための View（DSV）を作る。\nThrowIfFailed(\n    m_device->CreateDepthStencilView(depthTexture.Get(), nullptr, m_depthStencilView.GetAddressOf()),\n    \"CreateDepthStencilView failed.\");",
-    "start": 644,
-    "end": 663,
+    "start": 643,
+    "end": 662,
     "units": [
      {
       "blank": 0,
@@ -4439,8 +4549,8 @@ const CODE = {
     "kind": "member",
     "signature": "void CreateIconTexture()",
     "code": "// Icon.png を BGRA の画素配列として読み込む。\nconst ImageData image = LoadPngWithWIC(GetIconPath());\n\n// 画像と同じ大きさの Texture2D を、画素をコピーしながら作る。\n// SysMemPitch = CPU 側の画素配列で、1行が何 byte か。\nD3D11_TEXTURE2D_DESC textureDesc{};\ntextureDesc.Width = image.width;\ntextureDesc.Height = image.height;\ntextureDesc.MipLevels = 1;\ntextureDesc.ArraySize = 1;\ntextureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;\ntextureDesc.SampleDesc.Count = 1;\ntextureDesc.Usage = D3D11_USAGE_IMMUTABLE;\ntextureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;\nD3D11_SUBRESOURCE_DATA textureData{};\ntextureData.pSysMem = image.pixels.data();\ntextureData.SysMemPitch = image.width * 4;\n\nComPtr<ID3D11Texture2D> texture;\nThrowIfFailed(\n    m_device->CreateTexture2D(&textureDesc, &textureData, texture.GetAddressOf()),\n    \"CreateTexture2D(Icon) failed.\");\n\n// Shader から読むための View（SRV）を作る。Shader には Texture ではなく SRV を渡す。\nThrowIfFailed(\n    m_device->CreateShaderResourceView(texture.Get(), nullptr, m_iconSRV.GetAddressOf()),\n    \"CreateShaderResourceView(Icon) failed.\");",
-    "start": 613,
-    "end": 639,
+    "start": 612,
+    "end": 638,
     "units": [
      {
       "blank": 0,
@@ -4528,8 +4638,8 @@ const CODE = {
     "kind": "member",
     "signature": "void CreateConstantBuffer()",
     "code": "// 物体ごとに書き換える行列（SceneConstants）を置く Buffer を作る。\n// DEFAULT = GPU 用のメモリ。中身は描画のたびに UpdateSubresource で更新する。\nD3D11_BUFFER_DESC constantDesc{};\nconstantDesc.ByteWidth = sizeof(SceneConstants);\nconstantDesc.Usage = D3D11_USAGE_DEFAULT;\nconstantDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;\nThrowIfFailed(\n    m_device->CreateBuffer(&constantDesc, nullptr, m_constantBuffer.GetAddressOf()),\n    \"CreateBuffer(ConstantBuffer) failed.\");",
-    "start": 600,
-    "end": 608,
+    "start": 599,
+    "end": 607,
     "units": [
      {
       "blank": 0,
@@ -4562,8 +4672,8 @@ const CODE = {
     "kind": "member",
     "signature": "void CreateGeometryBuffers()",
     "code": "// CPU 側で、すべての物体の頂点と Index を作る。\nm_geometry = BuildSceneGeometry();\n\n// VertexBuffer を作る。作成と同時に初期データ（pSysMem）をコピーする。\n// IMMUTABLE = 作った後は書き換えない。GPU が読みやすい場所に置ける。\nD3D11_BUFFER_DESC vertexDesc{};\nvertexDesc.ByteWidth = static_cast<UINT>(m_geometry.vertices.size() * sizeof(Vertex));\nvertexDesc.Usage = D3D11_USAGE_IMMUTABLE;\nvertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;\nD3D11_SUBRESOURCE_DATA vertexData{};\nvertexData.pSysMem = m_geometry.vertices.data();\nThrowIfFailed(\n    m_device->CreateBuffer(&vertexDesc, &vertexData, m_vertexBuffer.GetAddressOf()),\n    \"CreateBuffer(VertexBuffer) failed.\");\n\n// IndexBuffer も同じ手順。BindFlags だけが違う。\nD3D11_BUFFER_DESC indexDesc{};\nindexDesc.ByteWidth = static_cast<UINT>(m_geometry.indices.size() * sizeof(std::uint16_t));\nindexDesc.Usage = D3D11_USAGE_IMMUTABLE;\nindexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;\nD3D11_SUBRESOURCE_DATA indexData{};\nindexData.pSysMem = m_geometry.indices.data();\nThrowIfFailed(\n    m_device->CreateBuffer(&indexDesc, &indexData, m_indexBuffer.GetAddressOf()),\n    \"CreateBuffer(IndexBuffer) failed.\");",
-    "start": 571,
-    "end": 595,
+    "start": 570,
+    "end": 594,
     "units": [
      {
       "blank": 0,
@@ -4646,8 +4756,8 @@ const CODE = {
     "kind": "member",
     "signature": "void CreateShaders()",
     "code": "// HLSL ファイルの VSMain / PSMain を、それぞれ Shader Model 5.0 でコンパイルする。\nconst std::filesystem::path shaderPath = GetShaderPath();\nconst ComPtr<ID3DBlob> vertexShaderCode = CompileShader(shaderPath, \"VSMain\", \"vs_5_0\");\nconst ComPtr<ID3DBlob> pixelShaderCode = CompileShader(shaderPath, \"PSMain\", \"ps_5_0\");\n\n// コンパイル結果から VertexShader / PixelShader オブジェクトを作る。\nThrowIfFailed(\n    m_device->CreateVertexShader(\n        vertexShaderCode->GetBufferPointer(),\n        vertexShaderCode->GetBufferSize(),\n        nullptr,\n        m_vertexShader.GetAddressOf()),\n    \"CreateVertexShader failed.\");\nThrowIfFailed(\n    m_device->CreatePixelShader(\n        pixelShaderCode->GetBufferPointer(),\n        pixelShaderCode->GetBufferSize(),\n        nullptr,\n        m_pixelShader.GetAddressOf()),\n    \"CreatePixelShader failed.\");\n\n// InputLayout: Vertex の各メンバーを、HLSL の POSITION / COLOR / TEXCOORD と対応させる。\n// 「何 byte 目から・どの形式で」読むかを1行ずつ書く。\nconst D3D11_INPUT_ELEMENT_DESC inputElements[] =\n{\n    { \"POSITION\", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, offsetof(Vertex, position), D3D11_INPUT_PER_VERTEX_DATA, 0 },\n    { \"COLOR\",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(Vertex, color),    D3D11_INPUT_PER_VERTEX_DATA, 0 },\n    { \"TEXCOORD\", 0, DXGI_FORMAT_R32G32_FLOAT,       0, offsetof(Vertex, uv),       D3D11_INPUT_PER_VERTEX_DATA, 0 },\n};\nThrowIfFailed(\n    m_device->CreateInputLayout(\n        inputElements,\n        static_cast<UINT>(std::size(inputElements)),\n        vertexShaderCode->GetBufferPointer(),\n        vertexShaderCode->GetBufferSize(),\n        m_inputLayout.GetAddressOf()),\n    \"CreateInputLayout failed.\");",
-    "start": 530,
-    "end": 566,
+    "start": 529,
+    "end": 565,
     "units": [
      {
       "blank": 0,
@@ -4715,8 +4825,8 @@ const CODE = {
     "kind": "member",
     "signature": "void CreateBackBufferView()",
     "code": "// SwapChain が持つ BackBuffer（Texture2D）を取り出す。\nComPtr<ID3D11Texture2D> backBuffer;\nThrowIfFailed(\n    m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf())),\n    \"IDXGISwapChain::GetBuffer failed.\");\n\n// 「描画先として使う」ための View（RTV）を作る。Draw の描画先には Texture ではなく View を渡す。\nThrowIfFailed(\n    m_device->CreateRenderTargetView(backBuffer.Get(), nullptr, m_backBufferRTV.GetAddressOf()),\n    \"CreateRenderTargetView(BackBuffer) failed.\");",
-    "start": 516,
-    "end": 525,
+    "start": 515,
+    "end": 524,
     "units": [
      {
       "blank": 0,
@@ -4739,8 +4849,8 @@ const CODE = {
     "kind": "member",
     "signature": "void CreateDeviceAndSwapChain(HWND hwnd)",
     "code": "// SwapChain の設定: 1280×720 の BackBuffer を2枚用意し、交互に表示する。\nDXGI_SWAP_CHAIN_DESC swapChainDesc{};\nswapChainDesc.BufferDesc.Width = kClientWidth;\nswapChainDesc.BufferDesc.Height = kClientHeight;\nswapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;\nswapChainDesc.SampleDesc.Count = 1;\nswapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;\nswapChainDesc.BufferCount = 2;\nswapChainDesc.OutputWindow = hwnd;\nswapChainDesc.Windowed = TRUE;\nswapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;\n\n// Debug ビルドでは Debug Layer を有効にし、API の使い方の誤りを「出力」ウィンドウへ表示させる。\nUINT flags = 0;\n#if defined(_DEBUG)\nflags |= D3D11_CREATE_DEVICE_DEBUG;\n#endif\nconst D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;\n\n// Device（作る係）・ImmediateContext（命令する係）・SwapChain（表示する係）を一度に作る。\nHRESULT hr = D3D11CreateDeviceAndSwapChain(\n    nullptr,\n    D3D_DRIVER_TYPE_HARDWARE,\n    nullptr,\n    flags,\n    &featureLevel,\n    1,\n    D3D11_SDK_VERSION,\n    &swapChainDesc,\n    m_swapChain.GetAddressOf(),\n    m_device.GetAddressOf(),\n    nullptr,\n    m_context.GetAddressOf());\n\n// Debug Layer が入っていない PC では失敗するため、Debug Layer なしで作り直す。\nif (FAILED(hr) && (flags & D3D11_CREATE_DEVICE_DEBUG) != 0)\n{\n    hr = D3D11CreateDeviceAndSwapChain(\n        nullptr,\n        D3D_DRIVER_TYPE_HARDWARE,\n        nullptr,\n        0,\n        &featureLevel,\n        1,\n        D3D11_SDK_VERSION,\n        &swapChainDesc,\n        m_swapChain.GetAddressOf(),\n        m_device.GetAddressOf(),\n        nullptr,\n        m_context.GetAddressOf());\n}\nThrowIfFailed(hr, \"D3D11CreateDeviceAndSwapChain failed.\");",
-    "start": 460,
-    "end": 511,
+    "start": 459,
+    "end": 510,
     "units": [
      {
       "blank": 0,
@@ -4853,8 +4963,8 @@ const CODE = {
     "kind": "member",
     "signature": "void RenderFullScene()",
     "code": "// 描画先を BackBuffer + Depth にして、両方を初期化する。\nconst float clearColor[4] = { 24.0f / 255.0f, 31.0f / 255.0f, 42.0f / 255.0f, 1.0f };\nm_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), m_depthStencilView.Get());\nm_context->ClearRenderTargetView(m_backBufferRTV.Get(), clearColor);\nm_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);\n\n// 共通の設定に加え、Icon.png・奥行きあり・不透明の State を接続する。\nBindCommonPipeline();\nm_context->PSSetShaderResources(0, 1, m_iconSRV.GetAddressOf());\nm_context->OMSetDepthStencilState(m_depthWriteState.Get(), 0);\nm_context->OMSetBlendState(m_opaqueBlendState.Get(), nullptr, 0xFFFFFFFF);\nconst ViewProjectionMatrices matrices = BuildViewProjection(m_projectionMode);\n\n// 不透明な物体を描く。同じ形でも World 行列を変えれば別の場所に置ける。\nDrawObject(m_geometry.floor, XMMatrixIdentity(), matrices.view, matrices.projection);\nDrawObject(m_geometry.cube, XMMatrixTranslation(-1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);\nDrawObject(m_geometry.pyramid, XMMatrixTranslation(1.65f, 0.0f, 0.0f), matrices.view, matrices.projection);\n\n// 半透明のパネルは最後に描く。State Object を「混ぜる」「Depth は書かない」ものへ差し替える。\nm_context->OMSetBlendState(m_alphaBlendState.Get(), nullptr, 0xFFFFFFFF);\nm_context->OMSetDepthStencilState(m_depthReadOnlyState.Get(), 0);\nDrawObject(m_geometry.transparentPanel, XMMatrixIdentity(), matrices.view, matrices.projection);\n\nThrowIfFailed(m_swapChain->Present(1, 0), \"IDXGISwapChain::Present failed.\");",
-    "start": 431,
-    "end": 454,
+    "start": 430,
+    "end": 453,
     "units": [
      {
       "blank": 0,
@@ -4942,8 +5052,8 @@ const CODE = {
     "kind": "member",
     "signature": "void RenderOneObject(const DrawRange& range)",
     "code": "// 描画先を BackBuffer + Depth にして、両方を初期化する。\nconst float clearColor[4] = { 24.0f / 255.0f, 31.0f / 255.0f, 42.0f / 255.0f, 1.0f };\nm_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), m_depthStencilView.Get());\nm_context->ClearRenderTargetView(m_backBufferRTV.Get(), clearColor);\nm_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);\n\n// 共通の設定に加え、Icon.png・奥行きあり・不透明の State を接続する。\nBindCommonPipeline();\nm_context->PSSetShaderResources(0, 1, m_iconSRV.GetAddressOf());\nm_context->OMSetDepthStencilState(m_depthWriteState.Get(), 0);\nm_context->OMSetBlendState(m_opaqueBlendState.Get(), nullptr, 0xFFFFFFFF);\n\n// 渡された物体を1個、原点に描く。\nconst ViewProjectionMatrices matrices = BuildViewProjection(m_projectionMode);\nDrawObject(range, XMMatrixIdentity(), matrices.view, matrices.projection);\n\nThrowIfFailed(m_swapChain->Present(1, 0), \"IDXGISwapChain::Present failed.\");",
-    "start": 409,
-    "end": 425,
+    "start": 408,
+    "end": 424,
     "units": [
      {
       "blank": 0,
@@ -5006,8 +5116,8 @@ const CODE = {
     "kind": "member",
     "signature": "void RenderClearOnly()",
     "code": "// 描画先を BackBuffer の RTV にして、背景色で塗りつぶす。\nconst float clearColor[4] = { 24.0f / 255.0f, 31.0f / 255.0f, 42.0f / 255.0f, 1.0f };\nm_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), nullptr);\nm_context->ClearRenderTargetView(m_backBufferRTV.Get(), clearColor);\n\n// BackBuffer をウィンドウへ表示する。\nThrowIfFailed(m_swapChain->Present(1, 0), \"IDXGISwapChain::Present failed.\");",
-    "start": 397,
-    "end": 403,
+    "start": 396,
+    "end": 402,
     "units": [
      {
       "blank": 0,
@@ -5795,7 +5905,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderClearOnly",
+      "comment": "",
+      "code": "        // TODO: RenderClearOnly"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5810,7 +5925,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderOneObject",
+      "comment": "",
+      "code": "        // TODO: RenderOneObject"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5825,7 +5945,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: RenderFullScene",
+      "comment": "",
+      "code": "        // TODO: RenderFullScene"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5845,7 +5970,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: EnableDebugLayer",
+      "comment": "",
+      "code": "        // TODO: EnableDebugLayer"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5860,7 +5990,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateDeviceAndSwapChain",
+      "comment": "",
+      "code": "        // TODO: CreateDeviceAndSwapChain"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5875,7 +6010,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateDescriptorHeaps",
+      "comment": "",
+      "code": "        // TODO: CreateDescriptorHeaps"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5890,7 +6030,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateBackBufferViews",
+      "comment": "",
+      "code": "        // TODO: CreateBackBufferViews"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5905,7 +6050,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateCommandObjects",
+      "comment": "",
+      "code": "        // TODO: CreateCommandObjects"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5920,7 +6070,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateFence",
+      "comment": "",
+      "code": "        // TODO: CreateFence"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5935,7 +6090,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: ExecuteCommandList",
+      "comment": "",
+      "code": "        // TODO: ExecuteCommandList"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5950,7 +6110,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: WaitForGpu",
+      "comment": "",
+      "code": "        // TODO: WaitForGpu"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5965,7 +6130,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: BeginFrame",
+      "comment": "",
+      "code": "        // TODO: BeginFrame"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5980,7 +6150,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: EndFrame",
+      "comment": "",
+      "code": "        // TODO: EndFrame"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -5995,7 +6170,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateRootSignature",
+      "comment": "",
+      "code": "        // TODO: CreateRootSignature"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6010,7 +6190,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreatePipelineStates",
+      "comment": "",
+      "code": "        // TODO: CreatePipelineStates"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6025,7 +6210,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateDefaultBuffer",
+      "comment": "",
+      "code": "        // TODO: CreateDefaultBuffer"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6040,7 +6230,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateGeometryBuffers",
+      "comment": "",
+      "code": "        // TODO: CreateGeometryBuffers"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6055,7 +6250,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateIconTexture",
+      "comment": "",
+      "code": "        // TODO: CreateIconTexture"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6070,7 +6270,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: UploadSceneResources",
+      "comment": "",
+      "code": "        // TODO: UploadSceneResources"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6085,7 +6290,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateConstantBuffer",
+      "comment": "",
+      "code": "        // TODO: CreateConstantBuffer"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6100,7 +6310,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: CreateDepthBuffer",
+      "comment": "",
+      "code": "        // TODO: CreateDepthBuffer"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6115,7 +6330,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: BindCommonPipeline",
+      "comment": "",
+      "code": "        // TODO: BindCommonPipeline"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {
@@ -6130,7 +6350,12 @@ const CODE = {
      },
      {
       "blank": 0,
-      "comment": "        // TODO: DrawObject",
+      "comment": "",
+      "code": "        // TODO: DrawObject"
+     },
+     {
+      "blank": 0,
+      "comment": "",
       "code": "    }"
      },
      {

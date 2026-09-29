@@ -471,3 +471,13 @@ thead th.current { color: var(--accent); }
   font-size: 12px;
 }
 .mini-button.copied { border-color: var(--run); color: var(--run); }
+
+/* ---------- 定数・マクロ ---------- */
+
+.macro-values { font-size: 13px; margin: 0; }
+.macro-values > div { border-top: 1px solid var(--line); padding: 7px 8px; border-radius: 6px; }
+.macro-values > div.current { background: var(--accent-soft); border-top-color: transparent; }
+.macro-values dt { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.macro-values dt code { word-break: break-all; font-weight: 700; }
+.macro-values dd { margin: 3px 0 0; }
+.macro-values .used { font-size: 11px; padding: 0 6px; border-radius: 9px; border: 1px solid var(--run); color: var(--run); }

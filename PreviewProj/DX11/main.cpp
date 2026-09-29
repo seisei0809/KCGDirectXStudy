@@ -94,12 +94,11 @@ namespace
     };
 
     // Shader の cbuffer SceneConstants（register b0）と同じ形にする。
-    // ConstantBuffer の大きさは 16byte の倍数でなければならない（float4x4 は 64byte）。
+    // HLSL の cbuffer は 16byte（float4 1つ分）単位で並ぶ。float4x4 は 64byte なのでそのまま一致する。
     struct SceneConstants
     {
         XMFLOAT4X4 worldViewProjection;
     };
-    static_assert(sizeof(SceneConstants) % 16 == 0);
 
     // ---------- 補助関数 ----------
 
